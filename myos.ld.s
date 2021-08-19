@@ -6,6 +6,5 @@ SECTIONS
 	.text : { *(.text) }
 	.data : { *(.data) }
 	.bss : { *(.bss) }
-	. = . + 0x400;
-	_stack = .;
+	_stack = . + 0x1000;
 }
