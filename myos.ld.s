@@ -1,10 +1,16 @@
+INCLUDE defconfig
+
 OUTPUT_ARCH(arm)
 ENTRY(_start)
 SECTIONS
 {
-	. = 0x0;
+	. = PHY_KERNEL_BASE + TEXT_OFFSET;
+
 	.text : { *(.text) }
 	.data : { *(.data) }
 	.bss : { *(.bss) }
-	_stack = . + 0x1000;
+	. = . + 4096;
+	_stack = .;
+	. = ALIGN(4096);
+	_end = .;
 }

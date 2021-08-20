@@ -1,4 +1,4 @@
-#include "string.h"
+#include "kernel.h"
 
 volatile char *g_uart = (volatile char *)0x10009000;
 extern int vsprintf(char *, const char *fmt, va_list args);
