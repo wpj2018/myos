@@ -1,7 +1,6 @@
 #include "kernel.h"
 
-volatile char *g_uart = (volatile char *)0x10009000;
-extern int vsprintf(char *, const char *fmt, va_list args);
+volatile char *g_uart = (volatile char *)UART_BASE;
 
 void put_uart_char(const char c)
 {
@@ -20,7 +19,7 @@ int printk(const char *fmt, ...)
 {
 	int ret;
 	va_list args;
-	char buf[100] = {0};
+	char buf[MAX_BUF_LEN] = {0};
 
 	va_start(args, fmt);
 	ret = vsprintf(buf, fmt, args);

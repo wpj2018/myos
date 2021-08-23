@@ -1,15 +1,9 @@
 #ifndef __STRING_H
 #define __STRING_H
 
-#include <stdarg.h>
-#define MAX_BUF_LEN 1024
+#include "types.h"
 
-typedef unsigned int size_t;
-typedef unsigned char uchar;
-typedef int bool;
-
-#define NULL ((void *)0)
-#define null ((void *)0)
+#define MAX_BUF_LEN 128
 
 int strlen(const char *str);
 char *strcpy(char *dst, const char *src);

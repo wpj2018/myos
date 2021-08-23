@@ -1,6 +1,5 @@
 #include "string.h"
 
-extern void put_uart(const char *);
 int strlen(const char *str)
 {
 	int len = 0;

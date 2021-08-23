@@ -1,8 +1,6 @@
 #ifndef __BOOTMEM_H
 #define __BOOTMEM_H
 
-#include <stdint.h>
-#include <stddef.h>
 #include "kernel.h"
 
 #define NR_BANKS 5

@@ -1,4 +1,11 @@
 #include "bootmem.h"
+#include "mm.h"
+
+#define __JUMP_TO_VM__ do {				\
+	uintptr_t __off__ = __PA_VA__(0);		\
+	asm("add pc, pc, %0"::"r"(__off__));		\
+	asm("nop");					\
+} while(0)
 
 const char logo[] = "hello myos !!!\n";
 int start_kernel(void)
@@ -9,6 +16,7 @@ int start_kernel(void)
 	bootmem_free((uintptr_t)ret);
 	ret = bootmem_alloc();
 	mm_init();
-	for(;;);
+	__JUMP_TO_VM__;
+	while(1);
 	return 0;
 }
