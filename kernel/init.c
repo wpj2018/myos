@@ -1,5 +1,6 @@
 #include "bootmem.h"
 #include "mm.h"
+#include "trap.h"
 
 #define __JUMP_TO_VM__ do {				\
 	uintptr_t __off__ = __PA_VA__(0);		\
@@ -15,8 +16,11 @@ int start_kernel(void)
 	void *ret = bootmem_alloc();
 	bootmem_free((uintptr_t)ret);
 	ret = bootmem_alloc();
+	trap_init();
 	mm_init();
 	__JUMP_TO_VM__;
+	asm("svc 0");
+	printk("return from svc !!!\n");
 	while(1);
 	return 0;
 }

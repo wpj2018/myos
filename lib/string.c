@@ -18,6 +18,13 @@ char *strcpy(char *dst, const char *src)
 	return res;
 }
 
+void *memcpy(void *dst, void *src, size_t n)
+{
+	for (size_t i = 0; i < n; i++) {
+		*((char*)dst + i) = *((char *)src + i);
+	}
+}
+
 void *memset(void *str, int c, size_t n)
 {
 	for (size_t i = 0; i < n; i++) {
