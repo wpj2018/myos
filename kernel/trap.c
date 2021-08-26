@@ -10,7 +10,7 @@ void hyp_call_hdl(void)
 struct handler_vector g_handler_vector = {
 	NULL,
 	NULL,
-	__PA_VA__(&hyp_call_hdl),
+	&hyp_call_hdl,
 	NULL,
 	NULL,
 	NULL,

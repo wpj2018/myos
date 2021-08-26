@@ -10,11 +10,17 @@ void create_sec_mapping(uintptr_t pstart, uintptr_t pend, uintptr_t vstart)
 	size_t mmu_flags = PMD_TYPE_SEC | PMD_SEC_B | PMD_SEC_C |
 			   PMD_SEC_AP_RW | DOMAIN_KERNEL_IDX;
 
+	/*
+	   g_pt_base cannot be used for it stored in data section and
+	   mmu is not enabled, so we cannot access vaddr
+	 */
+	size_t *pt_base = (size_t *)PHY_PT_BASE;
+
 	for (uintptr_t vaddr = vstart, paddr = pstart;
 	     paddr < pend; vaddr += SEC_SZ, paddr += SEC_SZ)
 	{
 		idx = vaddr >> SEC_BITS;
-		g_pt_base[idx] = ((paddr >> SEC_BITS) << SEC_BITS) | mmu_flags;
+		pt_base[idx] = ((paddr >> SEC_BITS) << SEC_BITS) | mmu_flags;
 	}
 }
 
@@ -33,11 +39,6 @@ void create_pt_mapping(uintptr_t paddr, uintptr_t vaddr, size_t perm)
 
 void paging_init()
 {
-	create_sec_mapping(PHY_KERNEL_BASE, (uintptr_t)&_end, VIRT_KERNEL_BASE);
-
-	create_sec_mapping(PHY_KERNEL_BASE, PHY_KERNEL_BASE + SEC_SZ,
-			   PHY_KERNEL_BASE);
-
 	create_pt_mapping(UART_BASE, UART_BASE, PT_AP_RW);
 	/* why set read-only does not work */
 	create_pt_mapping(PHY_VECTOR_BASE, VIRT_VECTOR_BASE, PT_AP_RD);
@@ -53,7 +54,7 @@ void enable_mmu(void)
 	asm volatile (
 		"mcr p15, 0, %0, c2, c0, 0"
 		:
-		: "r"(g_pt_base)
+		: "r"(PHY_PT_BASE)
 	);
 	asm volatile (
 		"mcr p15, 0, %0, c1, c0, 0"
@@ -62,8 +63,12 @@ void enable_mmu(void)
 	);
 }
 
-void mm_init(void)
+void early_mmu_init(void)
 {
-	paging_init();
+	create_sec_mapping(PHY_KERNEL_BASE, PHY_KERNEL_BASE + SEC_SZ, VIRT_KERNEL_BASE);
+
+	create_sec_mapping(PHY_KERNEL_BASE, PHY_KERNEL_BASE + SEC_SZ,
+			   PHY_KERNEL_BASE);
+
 	enable_mmu();
 }

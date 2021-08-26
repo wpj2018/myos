@@ -2,23 +2,13 @@
 #include "mm.h"
 #include "trap.h"
 
-#define __JUMP_TO_VM__ do {				\
-	uintptr_t __off__ = __PA_VA__(0);		\
-	asm("add pc, pc, %0"::"r"(__off__));		\
-	asm("nop");					\
-} while(0)
-
 const char logo[] = "hello myos !!!\n";
 int start_kernel(void)
 {
-	printk("%s", &logo[0]);
 	bootmem_init();
-	void *ret = bootmem_alloc();
-	bootmem_free((uintptr_t)ret);
-	ret = bootmem_alloc();
+	paging_init();
+	printk("%s", &logo[0]);
 	trap_init();
-	mm_init();
-	__JUMP_TO_VM__;
 	asm("svc 0");
 	printk("return from svc !!!\n");
 	while(1);

@@ -31,5 +31,6 @@
 #define __VA_PA__(x)		(x - VIRT_KERNEL_BASE + PHY_KERNEL_BASE)
 
 void mm_init(void);
+void paging_init(void);
 
 #endif

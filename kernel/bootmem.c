@@ -1,6 +1,5 @@
 #include "bootmem.h"
-
-extern uintptr_t _end;
+#include "mm.h"
 
 struct mem_info g_mem_info;
 
@@ -38,15 +37,19 @@ static void bitmap_set(uintptr_t start, uintptr_t end, bool is_set)
 
 void bootmem_init(void)
 {
+	extern char _end[];
+	uintptr_t phy_kernel_end = __VA_PA__((uintptr_t)_end);
+
 	memset(&g_mem_info, 0, sizeof(struct mem_info));
 	g_mem_info.min_addr = (uintptr_t)-1;
-	bootmem_add_bank((uintptr_t)0x60000000, (uintptr_t)0xA0000000, MEM_BANK_FREE);
-	bootmem_add_bank((uintptr_t)PHY_KERNEL_BASE, (uintptr_t)&_end, MEM_BANK_RESERVE);
+
+	bootmem_add_bank((uintptr_t)PHY_RAM_BASE, (uintptr_t)PHY_RAM_END, MEM_BANK_FREE);
+	bootmem_add_bank((uintptr_t)PHY_RAM_BASE, phy_kernel_end, MEM_BANK_RESERVE);
 
 	size_t nbits = (g_mem_info.max_addr - g_mem_info.min_addr) >> PAGE_BITS;
-	g_mem_info.bitmaps = (uchar *)&_end;
+	g_mem_info.bitmaps = (uchar *)phy_kernel_end ;
 	g_mem_info.bitmap_bytes = nbits / BYTES_PER_UCHAR;
-	bootmem_add_bank((uintptr_t)&_end, (uintptr_t)&_end + g_mem_info.bitmap_bytes,
+	bootmem_add_bank(phy_kernel_end , phy_kernel_end + g_mem_info.bitmap_bytes,
 			 MEM_BANK_RESERVE);
 
 	memset((void*)g_mem_info.bitmaps, 0xff, g_mem_info.bitmap_bytes);
