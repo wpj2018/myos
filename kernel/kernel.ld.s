@@ -11,9 +11,13 @@ SECTIONS
 		*(.text)
 	}
 	.init : {
-		__vector_start__ = .;
+		__module_start = .;
+		*(.module.init)
+		__module_end = .;
+
+		__vector_start = .;
 		*(.vector.init)
-		__vector_end__ = .;
+		__vector_end = .;
 	}
 	.data : { *(.data) }
 	.bss : { *(.bss) }

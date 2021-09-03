@@ -1,7 +1,7 @@
 include ../toolchain.mk
 
 TARGET := libc.a
-CFLAGS := -g -I../include
+CFLAGS := -g -I../include -fno-stack-protector
 
 SOURCE = $(wildcard *.c *.S)
 OBJS = $(patsubst %.c,%.o,$(SOURCE:.S=.o))

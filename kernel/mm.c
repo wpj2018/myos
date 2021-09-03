@@ -29,12 +29,19 @@ void create_pt_mapping(uintptr_t paddr, uintptr_t vaddr, size_t perm)
 	size_t l1_idx = vaddr >> SEC_BITS;
 	size_t l2_idx = (vaddr >> PAGE_BITS) & 0xff;
 	size_t mmu_flags = PT_TYPE_SMALL | PT_B | PT_C | perm;
+	uintptr_t *page_table = NULL;
 
-	uintptr_t *page_table = (uintptr_t *)bootmem_alloc();
-	g_pt_base[l1_idx] = (uintptr_t)page_table | PMD_TYPE_PT |
-			    DOMAIN_KERNEL_IDX;
-	page_table[l2_idx] = ((paddr >> PAGE_BITS) << PAGE_BITS) |
-			     mmu_flags;
+	if (!g_pt_base[l1_idx]) {
+		page_table = (uintptr_t *)bootmem_alloc();
+		g_pt_base[l1_idx] = (uintptr_t)page_table | PMD_TYPE_PT |
+				    DOMAIN_KERNEL_IDX;
+	} else {
+		page_table = (uintptr_t *)((g_pt_base[l1_idx] >> PAGE_BITS) << PAGE_BITS);
+	}
+	if (!page_table[l2_idx]) {
+		page_table[l2_idx] = ((paddr >> PAGE_BITS) << PAGE_BITS) |
+				      mmu_flags;
+	}
 }
 
 void paging_init()
@@ -71,4 +78,10 @@ void early_mmu_init(void)
 			   PHY_KERNEL_BASE);
 
 	enable_mmu();
+}
+
+void *ioremap(uintptr_t phys_addr)
+{
+	create_pt_mapping(phys_addr, phys_addr, PT_AP_RW);
+	return (void*)phys_addr;
 }

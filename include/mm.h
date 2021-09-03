@@ -10,7 +10,7 @@
 #define PMD_SEC_AP_RW		(1UL << 10) //access read/write in EL1
 
 #define PMD_TYPE_PT		(1UL << 0)
-#define PT_TYPE_SMALL		(1UL << 1)
+#define PT_TYPE_SMALL		(3UL << 0)
 #define PT_B			(1UL << 2)
 #define PT_C			(1UL << 3)
 #define PT_AP_RW		(1UL << 4)
@@ -32,5 +32,6 @@
 
 void mm_init(void);
 void paging_init(void);
+void *ioremap(uintptr_t phys_addr);
 
 #endif
