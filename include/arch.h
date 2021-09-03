@@ -15,4 +15,7 @@
 #define MODE_UND	0b11011
 #define MODE_SYS	0b11111
 
+#define REG_NUM		17
+#define TASK_STACK_SIZE	4096
+
 #endif

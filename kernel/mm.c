@@ -85,3 +85,15 @@ void *ioremap(uintptr_t phys_addr)
 	create_pt_mapping(phys_addr, phys_addr, PT_AP_RW);
 	return (void*)phys_addr;
 }
+
+/* TODO: vm management unimplement */
+void *vmalloc(size_t size)
+{
+	void *paddr = bootmem_alloc();
+	return paddr;
+}
+
+void mm_init(void)
+{
+
+}

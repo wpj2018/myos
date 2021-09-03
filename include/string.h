@@ -1,6 +1,11 @@
 #ifndef __STRING_H
 #define __STRING_H
 
+#include <stdarg.h>
+#include <stddef.h>
+#include <stdint.h>
+#include <stddef.h>
+
 #include "types.h"
 
 #define MAX_BUF_LEN 128

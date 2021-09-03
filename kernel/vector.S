@@ -11,6 +11,11 @@ __vector_start:
 	b irq_stub
 	b .
 
+.macro get_ctx, ctx
+	mov \ctx, sp, lsr #12
+	mov \ctx, \ctx, lsl #12
+.endm
+
 .macro handler_stub, name
 \name:
 	sub lr, lr, #4
@@ -36,30 +41,38 @@ handler_start:
 
 	mov r0, sp
 	msr cpsr_c, #(MODE_SVC | MASK_I | MASK_F)
-	sub sp, sp, #4 * 16
-	stmia sp, {r1-r12}
 
-	// r1 = org r0
-	// r2 = sp
-	// r3 = lr_srv
+	push {r0}
+	get_ctx r0
+	stmib r0!, {r1-r12}
+	pop {r7}
+
+	// r0 = ctx
+	// r2 = sp_svc
+	// r3 = lr_svc
 	// r4 = lr_irq
 	// r5 = spsr
 	// r6 = idx
-	add r2, sp, #4 * 16
+	// r7 = execpt sp
+	mov r2, sp
 	mov r3, lr
-	ldmia r0, {r1, r4-r6}
-	stmdb r2, {r2-r5}
-	str r1, [sp, #-4]!
-	// save context finish
+	ldmib r7, {r4-r6}
+	stmib r0, {r2-r5}
+
+	// save org r0
+	ldr r0, [r7]
+	get_ctx r7
+	str r0, [r7]
+	// save ctx finish
 
 	ldr r1, =g_handler_vector
 	add r1, r1, r6, lsr #2
 
-	mov r0, sp
 	adr lr, ret_to_usr
 	ldr pc, [r1]
 
 ret_to_usr:
-	ldr r0, [sp, #4 * 16]
+	ldr r7, [r0]
+	ldr r0, [r7, #4 * (REG_NUM - 1)]
 	msr spsr, r0
-	ldmia sp, {r0-pc}^
+	ldmia r7, {r0-pc}^

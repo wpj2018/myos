@@ -2,14 +2,14 @@
 #define __TRAP_H
 
 struct handler_vector {
-	void (*not_used_hdl)(void);
-	void (*und_ins_hdl)(void);
-	void (*hyp_call_hdl)(void);
-	void (*prefetch_abort_hdl)(void);
-	void (*data_abort_hdl)(void);
-	void (*hyp_trap_hdl)(void);
-	void (*irq_hdl)(void);
-	void (*fiq_hdl)(void);
+	struct task_struct *(*not_used_hdl)();
+	struct task_struct *(*und_ins_hdl)();
+	struct task_struct *(*svc_hdl)();
+	struct task_struct *(*prefetch_abort_hdl)();
+	struct task_struct *(*dabt_hdl)();
+	struct task_struct *(*hyp_trap_hdl)();
+	struct task_struct *(*irq_hdl)();
+	struct task_struct *(*fiq_hdl)();
 };
 
 void trap_init(void);

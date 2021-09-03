@@ -19,10 +19,12 @@ SECTIONS
 		*(.vector.init)
 		__vector_end = .;
 	}
-	.data : { *(.data) }
+	.data : {
+		. = ALIGN(4096);
+		*(.init.stack)
+		__init_stack = .;
+		*(.data)
+	}
 	.bss : { *(.bss) }
-	. = . + 4096;
-	_stack = .;
-	. = ALIGN(4096);
 	_end = .;
 }

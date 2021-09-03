@@ -3,36 +3,44 @@
 #include "arch.h"
 #include "gic.h"
 #include "timer.h"
+#include "sched.h"
 #include "trap.h"
 
 size_t irq_stack[4];
 size_t abt_stack[4];
 size_t und_stack[4];
 
-void hyp_call_hdl(void)
+struct task_struct *svc_hdl()
 {
 	printk("------catch svc-------\n");
+	return current;
 }
 
-void data_abort_hdl(void)
+struct task_struct *dabt_hdl()
 {
 	printk("------catch data abort-------\n");
+	return current;
 }
 
-void irq_hdl(void)
+struct task_struct *irq_hdl()
 {
 	printk("------catch irq-------\n");
+	struct task_struct *task;
 	size_t ack_no = gicc_get_ack();
 	timer_clear_int1();
 	gicc_set_eoi(ack_no);
+
+	task = sched_next();
+
+	return task;
 }
 
 struct handler_vector g_handler_vector = {
 	NULL,
 	NULL,
-	&hyp_call_hdl,
+	&svc_hdl,
 	NULL,
-	&data_abort_hdl,
+	&dabt_hdl,
 	NULL,
 	&irq_hdl,
 	NULL
