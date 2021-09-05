@@ -77,6 +77,7 @@ void early_mmu_init(void)
 	create_sec_mapping(PHY_KERNEL_BASE, PHY_KERNEL_BASE + SEC_SZ,
 			   PHY_KERNEL_BASE);
 
+	create_sec_mapping(PHY_RAMDISK_BASE, PHY_RAM_END, PHY_RAMDISK_BASE);
 	enable_mmu();
 }
 

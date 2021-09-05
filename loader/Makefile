@@ -3,17 +3,22 @@ include ../toolchain.mk
 TARGET := bootimage
 CFLAGS := -g -I../include
 LDFLAGS := -T loader.ld.s -lc -L../lib
-SEC_FLAG := --add-section .archive=kernel.bin --set-section-flags .archive=alloc
+SEC_FLAG := --add-section .archive=kernel --set-section-flags .archive=alloc
+SEC_FLAG += --add-section .rootfs=rootfs --set-section-flags .rootfs=alloc
 
 SOURCE = $(wildcard *.S *.c)
+
+PREREQUISITE = kernel rootfs
 OBJS = $(patsubst %.c,%.o,$(SOURCE:.S=.o))
 
-${TARGET} : kernel.bin ${OBJS}
+${TARGET} : ${PREREQUISITE} ${OBJS}
 	${OBJCOPY} ${SEC_FLAG} main.o
 	${LD} ${OBJS} -o $@ ${LDFLAGS}
 
-kernel.bin:
+kernel:
 	${OBJCOPY} -O binary ../kernel/kernel.elf $@
+rootfs:
+	cp ../rootfs/ramdisk $@
 
 %.o : %.c
 	${CC} ${CFLAGS} -c $< -o $@
@@ -21,4 +26,4 @@ kernel.bin:
 	${CC} ${CFLAGS} -c $< -o $@
 
 clean:
-	rm -rf kernel.bin ${TARGET} ${OBJS}
+	rm -rf ${PREREQUISITE} ${TARGET} ${OBJS}

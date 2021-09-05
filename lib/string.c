@@ -1,5 +1,14 @@
 #include "string.h"
 
+int strcmp(const char *s, const char *t)
+{
+	while (*s && *t && (*s == *t)) {
+		s++;
+		t++;
+	}
+	return (*s != *t);
+}
+
 int strlen(const char *str)
 {
 	int len = 0;

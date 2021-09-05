@@ -2,7 +2,7 @@ OUTPUT_ARCH(arm)
 ENTRY(_start)
 SECTIONS
 {
-	. = 0x60000000;
+	. = 0x80000000;
 
 	.text : { *(.text) }
 	.rel.plt : { *(.rel.plt) }
@@ -10,6 +10,11 @@ SECTIONS
 		__archive_start = .;
 		*(.archive)
 		__archive_end = .;
+
+		__rootfs_start = .;
+		*(.rootfs)
+		__rootfs_end = .;
+
 		*(.data)
 	}
 	.bss : { *(.bss) }
