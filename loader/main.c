@@ -12,7 +12,11 @@ void main(void)
 	extern char __rootfs_end[];
 	size_t rootfs_size = __rootfs_end - __rootfs_start;
 
-	memcpy((void *)(PHY_RAMDISK_BASE), (void *)__rootfs_start, rootfs_size);
+	struct boot_args args = {
+		.rootfs_start = (uintptr_t)__rootfs_start,
+		.rootfs_size = rootfs_size,
+	};
 
+	asm("mov r0, %0"::"r"(&args));
 	asm("mov pc, %0"::"r"(PHY_KERNEL_BASE));
 }

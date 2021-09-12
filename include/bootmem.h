@@ -25,7 +25,7 @@ struct mem_info {
 	size_t bitmap_bytes;
 };
 
-void bootmem_init(void);
+void bootmem_init(struct boot_args *args);
 void *bootmem_alloc(void);
 void bootmem_free(uintptr_t paddr);
 

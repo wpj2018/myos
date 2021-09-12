@@ -11,6 +11,7 @@ SECTIONS
 		*(.archive)
 		__archive_end = .;
 
+		. = ALIGN(1<<20);
 		__rootfs_start = .;
 		*(.rootfs)
 		__rootfs_end = .;

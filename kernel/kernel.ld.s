@@ -26,5 +26,7 @@ SECTIONS
 		*(.data)
 	}
 	.bss : { *(.bss) }
+
+	. = ALIGN(4096);
 	_end = .;
 }

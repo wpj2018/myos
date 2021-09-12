@@ -2,9 +2,23 @@
 #include "mm.h"
 
 extern uintptr_t _end;
-size_t *g_pt_base = (size_t *)PHY_PT_BASE;
+size_t *g_pt_base = (size_t *)__PA_VA__(PHY_PT_BASE);
 
-void create_sec_mapping(uintptr_t pstart, uintptr_t pend, uintptr_t vstart)
+void clear_secs(uintptr_t vstart, uintptr_t vend)
+{
+	size_t idx;
+	size_t start_idx = vstart >> SEC_BITS;
+	size_t end_idx = vend >> SEC_BITS;
+	if (vend & SEC_MASK) {
+		end_idx++;
+	}
+
+	for (idx = start_idx; idx < end_idx; idx++) {
+		g_pt_base[idx] = 0;
+	}
+}
+
+void map_secs(uintptr_t pstart, uintptr_t pend, uintptr_t vstart)
 {
 	size_t idx;
 	size_t mmu_flags = PMD_TYPE_SEC | PMD_SEC_B | PMD_SEC_C |
@@ -17,38 +31,55 @@ void create_sec_mapping(uintptr_t pstart, uintptr_t pend, uintptr_t vstart)
 	size_t *pt_base = (size_t *)PHY_PT_BASE;
 
 	for (uintptr_t vaddr = vstart, paddr = pstart;
-	     paddr < pend; vaddr += SEC_SZ, paddr += SEC_SZ)
+	     paddr < pend; vaddr += SEC_SIZE, paddr += SEC_SIZE)
 	{
 		idx = vaddr >> SEC_BITS;
-		pt_base[idx] = ((paddr >> SEC_BITS) << SEC_BITS) | mmu_flags;
+		pt_base[idx] = (paddr & (~SEC_MASK)) | mmu_flags;
 	}
 }
 
-void create_pt_mapping(uintptr_t paddr, uintptr_t vaddr, size_t perm)
+void clear_page(uintptr_t vaddr)
+{
+	size_t l1_idx = vaddr >> SEC_BITS;
+	size_t l2_idx = (vaddr >> PAGE_BITS) & 0xff;
+	uintptr_t phy_page = 0;
+
+	if (g_pt_base[l1_idx]) {
+		phy_page= g_pt_base[l1_idx] & (~PAGE_MASK);
+	}
+	uintptr_t *page_table = (uintptr_t *)__PA_VA__(phy_page);
+	if (page_table && page_table[l2_idx]) {
+		page_table[l2_idx] = 0;
+	}
+}
+
+void map_page(uintptr_t paddr, uintptr_t vaddr, size_t perm)
 {
 	size_t l1_idx = vaddr >> SEC_BITS;
 	size_t l2_idx = (vaddr >> PAGE_BITS) & 0xff;
 	size_t mmu_flags = PT_TYPE_SMALL | PT_B | PT_C | perm;
-	uintptr_t *page_table = NULL;
+	uintptr_t phy_page = 0;
 
 	if (!g_pt_base[l1_idx]) {
-		page_table = (uintptr_t *)bootmem_alloc();
-		g_pt_base[l1_idx] = (uintptr_t)page_table | PMD_TYPE_PT |
-				    DOMAIN_KERNEL_IDX;
+		phy_page = (uintptr_t)bootmem_alloc();
+		g_pt_base[l1_idx] = phy_page | PMD_TYPE_PT | DOMAIN_KERNEL_IDX;
 	} else {
-		page_table = (uintptr_t *)((g_pt_base[l1_idx] >> PAGE_BITS) << PAGE_BITS);
+		phy_page= g_pt_base[l1_idx] & (~PAGE_MASK);
 	}
+	uintptr_t *page_table = (uintptr_t *)__PA_VA__(phy_page);
 	if (!page_table[l2_idx]) {
-		page_table[l2_idx] = ((paddr >> PAGE_BITS) << PAGE_BITS) |
-				      mmu_flags;
+		page_table[l2_idx] = (paddr & (~PAGE_MASK)) | mmu_flags;
 	}
 }
 
-void paging_init()
+void paging_init(void)
 {
-	create_pt_mapping(UART_BASE, UART_BASE, PT_AP_RW);
+	clear_secs(0, VIRT_KERNEL_BASE & (~SEC_MASK));
+	clear_secs(HIGHMEM_BASE, END_MEM);
+
+	map_page(PHY_UART_BASE, VIRT_UART_BASE, PT_AP_RW);
 	/* why set read-only does not work */
-	create_pt_mapping(PHY_VECTOR_BASE, VIRT_VECTOR_BASE, PT_AP_RD);
+	map_page(PHY_VECTOR_BASE, VIRT_VECTOR_BASE, PT_AP_RD);
 }
 
 void enable_mmu(void)
@@ -66,24 +97,21 @@ void enable_mmu(void)
 	asm volatile (
 		"mcr p15, 0, %0, c1, c0, 0"
 		:
-		: "r"(CR_M | CR_V)
+		: "r"(SCTLR_M | SCTLR_A | SCTLR_C | SCTLR_V)
 	);
 }
 
 void early_mmu_init(void)
 {
-	create_sec_mapping(PHY_KERNEL_BASE, PHY_KERNEL_BASE + SEC_SZ, VIRT_KERNEL_BASE);
+	map_secs(PHY_RAM_BASE, PHY_RAM_BASE + SEC_SIZE, PHY_RAM_BASE);
+	map_secs(PHY_RAM_BASE, PHY_RAM_END, __PA_VA__(PHY_RAM_BASE));
 
-	create_sec_mapping(PHY_KERNEL_BASE, PHY_KERNEL_BASE + SEC_SZ,
-			   PHY_KERNEL_BASE);
-
-	create_sec_mapping(PHY_RAMDISK_BASE, PHY_RAM_END, PHY_RAMDISK_BASE);
 	enable_mmu();
 }
 
 void *ioremap(uintptr_t phys_addr)
 {
-	create_pt_mapping(phys_addr, phys_addr, PT_AP_RW);
+	map_page(phys_addr, phys_addr, PT_AP_RW);
 	return (void*)phys_addr;
 }
 
@@ -91,7 +119,7 @@ void *ioremap(uintptr_t phys_addr)
 void *vmalloc(size_t size)
 {
 	void *paddr = bootmem_alloc();
-	return paddr;
+	return (void *)__PA_VA__(paddr);
 }
 
 void mm_init(void)

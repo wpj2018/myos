@@ -74,8 +74,8 @@ void trap_init(void)
 	extern char __vector_end[];
 
 	size_t vector_size =  __vector_end - __vector_start;
-	memset((void *)PHY_VECTOR_BASE, 0, PAGE_SIZE);
-	memcpy((void *)PHY_VECTOR_BASE, __vector_start, vector_size);
+	memset((void *)__PA_VA__(PHY_VECTOR_BASE), 0, PAGE_SIZE);
+	memcpy((void *)__PA_VA__(PHY_VECTOR_BASE), __vector_start, vector_size);
 
 	setup_stack();
 }

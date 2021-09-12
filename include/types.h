@@ -17,4 +17,6 @@ typedef __u64  __le64;
 #define NULL ((void *)0)
 #define null ((void *)0)
 
+#define BYTES_PER_UCHAR		(8UL)
+
 #endif

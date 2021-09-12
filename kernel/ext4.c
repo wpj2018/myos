@@ -174,7 +174,7 @@ void ext4_read_file(struct ext4_super_block *sb, struct ext4_inode *inode, void 
 
 void ext4_init(void)
 {
-	struct ext4_super_block *sb = (struct ext4_super_block *)(PHY_RAMDISK_BASE + EXT4_SB_OFFSET);
+	struct ext4_super_block *sb = (struct ext4_super_block *)(VIRT_RAMDISK_BASE + EXT4_SB_OFFSET);
 	struct ext4_inode *itables = ext4_get_itable(sb);
 	struct ext4_inode *root = &itables[EXT4_ROOT_INO - 1];
 	struct ext4_dentry *dentry = ext4_get_dentry(sb, root, "verify.bin");

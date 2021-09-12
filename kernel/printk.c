@@ -1,6 +1,6 @@
 #include "kernel.h"
 
-volatile char *g_uart = (volatile char *)UART_BASE;
+volatile char *g_uart = (volatile char *)(VIRT_UART_BASE);
 
 void put_uart_char(const char c)
 {
