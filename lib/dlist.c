@@ -1,6 +1,6 @@
-#include "list.h"
+#include "dlist.h"
 
-void list_add(struct list_node *head, struct list_node *node)
+void dlist_add(struct dlist_node *head, struct dlist_node *node)
 {
 	node->prev = head;
 	node->next = head->next;
@@ -8,7 +8,7 @@ void list_add(struct list_node *head, struct list_node *node)
 	head->next = node;
 }
 
-void list_del(struct list_node *node)
+void dlist_del(struct dlist_node *node)
 {
 	node->next->prev = node->prev;
 	node->prev->next = node->next;
