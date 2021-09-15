@@ -47,7 +47,7 @@ void bootmem_init(struct boot_args *args)
 	bootmem_add_bank(PHY_RAM_BASE, phy_kernel_end, MEM_BANK_RESERVE);
 
 	/* copy rootfs */
-	memcpy((void *)VIRT_RAMDISK_BASE, (void *)__PA_VA__(args->rootfs_start), args->rootfs_size);
+	//memcpy((void *)VIRT_RAMDISK_BASE, (void *)__PA_VA__(args->rootfs_start), args->rootfs_size);
 	bootmem_add_bank(PHY_RAMDISK_BASE, PHY_RAMDISK_BASE + args->rootfs_size, MEM_BANK_RESERVE);
 
 	size_t nbits = (g_mem_info.max_addr - g_mem_info.min_addr) >> PAGE_BITS;
