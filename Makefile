@@ -1,4 +1,4 @@
-DIRS := rootfs lib kernel loader
+DIRS := rootfs lib tests kernel loader
 
 bootimage:
 	for dir in ${DIRS}; do		\

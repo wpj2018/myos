@@ -4,6 +4,7 @@
 #include "module.h"
 #include "task.h"
 #include "fs.h"
+#include "test.h"
 
 const char logo[] = "hello myos !!!\n";
 int start_kernel(struct boot_args *args)
@@ -14,6 +15,8 @@ int start_kernel(struct boot_args *args)
 	printk("%s", &logo[0]);
 
 	fs_init();
+	test_main();
+	while (1);
 	trap_init();
 	module_init();
 	mm_init();
