@@ -16,7 +16,6 @@ int start_kernel(struct boot_args *args)
 
 	fs_init();
 	test_main();
-	while (1);
 	trap_init();
 	module_init();
 	mm_init();
