@@ -159,7 +159,7 @@ void rb_insert(struct rb_tree *tree, struct rb_node *node)
 struct rb_node *rb_min_node(struct rb_tree *tree)
 {
 	struct rb_node *p = tree->root;
-	while (p->left) {
+	while (p && p->left) {
 		p = p->left;
 	}
 	return p;
@@ -168,7 +168,7 @@ struct rb_node *rb_min_node(struct rb_tree *tree)
 struct rb_node *rb_max_node(struct rb_tree *tree)
 {
 	struct rb_node *p = tree->root;
-	while (p->right) {
+	while (p && p->right) {
 		p = p->right;
 	}
 	return p;

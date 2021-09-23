@@ -1,4 +1,5 @@
 #include "bootmem.h"
+#include "buddy.h"
 #include "mm.h"
 
 extern uintptr_t _end;
@@ -45,7 +46,7 @@ void clear_page(uintptr_t vaddr)
 	uintptr_t phy_page = 0;
 
 	if (g_pt_base[l1_idx]) {
-		phy_page= g_pt_base[l1_idx] & (~PAGE_MASK);
+		phy_page= g_pt_base[l1_idx] & PAGE_MASK;
 	}
 	uintptr_t *page_table = (uintptr_t *)__PA_VA__(phy_page);
 	if (page_table && page_table[l2_idx]) {
@@ -64,11 +65,11 @@ void map_page(uintptr_t paddr, uintptr_t vaddr, size_t perm)
 		phy_page = (uintptr_t)bootmem_alloc();
 		g_pt_base[l1_idx] = phy_page | PMD_TYPE_PT | DOMAIN_KERNEL_IDX;
 	} else {
-		phy_page= g_pt_base[l1_idx] & (~PAGE_MASK);
+		phy_page= g_pt_base[l1_idx] & PAGE_MASK;
 	}
 	uintptr_t *page_table = (uintptr_t *)__PA_VA__(phy_page);
 	if (!page_table[l2_idx]) {
-		page_table[l2_idx] = (paddr & (~PAGE_MASK)) | mmu_flags;
+		page_table[l2_idx] = (paddr & PAGE_MASK) | mmu_flags;
 	}
 }
 
@@ -118,11 +119,31 @@ void *ioremap(uintptr_t phys_addr)
 /* TODO: vm management unimplement */
 void *vmalloc(size_t size)
 {
-	void *paddr = bootmem_alloc();
-	return (void *)__PA_VA__(paddr);
+}
+
+void *kalloc(size_t size)
+{
+	struct page *page;
+
+	page = buddy_alloc_pages(size);
+	if (page != NULL) {
+		return (void *)__PA_VA__(page_to_phy(page));
+	}
+	return NULL;
+}
+
+void kfree(void *vaddr)
+{
+	struct page *page;
+
+	page = pfn_to_page(__VA_PA__(vaddr));
+	buddy_free_pages(page);
 }
 
 void mm_init(void)
 {
-
+	bootmem_stat();
+	buddy_init();
+	bootmem_free_to_buddy();
+	buddy_stat();
 }

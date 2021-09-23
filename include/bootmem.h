@@ -5,15 +5,9 @@
 
 #define NR_BANKS 5
 
-enum mem_bank_tag {
-	MEM_BANK_FREE,
-	MEM_BANK_RESERVE,
-};
-
 struct mem_bank {
 	uintptr_t start;
 	uintptr_t end;
-	enum mem_bank_tag tag;
 };
 
 struct mem_info {
@@ -23,10 +17,14 @@ struct mem_info {
 	uintptr_t max_addr;
 	uchar *bitmaps;
 	size_t bitmap_bytes;
+	size_t used_pages;
+	size_t free_pages;
 };
 
+void bootmem_stat(void);
 void bootmem_init(struct boot_args *args);
 void *bootmem_alloc(void);
 void bootmem_free(uintptr_t paddr);
+void bootmem_free_to_buddy(void);
 
 #endif

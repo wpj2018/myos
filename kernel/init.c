@@ -11,18 +11,18 @@ int start_kernel(struct boot_args *args)
 {
 	bootmem_init((struct boot_args *)__PA_VA__(args));
 	paging_init();
+	mm_init();
 
 	printk("%s", &logo[0]);
 
 	fs_init();
-	test_main();
 	trap_init();
 	module_init();
-	mm_init();
+	test_main();
 	task_init();
 
 	while(1) {
-		printk("sleep\n");
+	//	printk("sleep\n");
 	}
 	return 0;
 }

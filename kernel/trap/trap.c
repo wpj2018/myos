@@ -24,7 +24,7 @@ struct task_struct *dabt_hdl()
 
 struct task_struct *irq_hdl()
 {
-	printk("------catch irq-------\n");
+//	printk("------catch irq-------\n");
 	struct task_struct *task;
 	size_t ack_no = gicc_get_ack();
 	timer_clear_int1();

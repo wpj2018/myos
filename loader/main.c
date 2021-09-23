@@ -10,11 +10,10 @@ void main(void)
 
 	extern char __rootfs_start[];
 	extern char __rootfs_end[];
-	size_t rootfs_size = __rootfs_end - __rootfs_start;
 
 	struct boot_args args = {
 		.rootfs_start = (uintptr_t)__rootfs_start,
-		.rootfs_size = rootfs_size,
+		.rootfs_end = (uintptr_t)__rootfs_end,
 	};
 
 	asm("mov r0, %0"::"r"(&args));

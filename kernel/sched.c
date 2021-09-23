@@ -10,7 +10,7 @@ struct task_struct *sched_next()
 
 	task = container_of(rb_node, struct task_struct, rb_node);
 
-	printk("task name = %s ticks = %d\n", task->name, task->ticks);
+//	printk("task name = %s ticks = %d\n", task->name, task->ticks);
 	if (task->ticks > 0) {
 		task->ticks--;
 		rb_update(current->rb_tree, rb_node);

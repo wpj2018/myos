@@ -30,5 +30,7 @@ void mm_init(void);
 void paging_init(void);
 void *ioremap(uintptr_t phys_addr);
 void *vmalloc(size_t size);
+void *kalloc(size_t size);
+void kfree(void *vaddr);
 
 #endif

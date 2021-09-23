@@ -12,6 +12,12 @@ void dlist_del(struct dlist_node *node)
 {
 	node->next->prev = node->prev;
 	node->prev->next = node->next;
-	node->next = null;
-	node->prev = null;
+	node->next = node;
+	node->prev = node;
+}
+
+void dlist_init(struct dlist_node *node)
+{
+	node->next = node;
+	node->prev = node;
 }

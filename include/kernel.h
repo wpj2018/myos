@@ -2,10 +2,7 @@
 #define __KERNEL_H
 
 #include "string.h"
-
-#define PAGE_BITS		(12UL)
-#define PAGE_SIZE		(1UL << PAGE_BITS)
-#define PAGE_MASK		(PAGE_SIZE - 1)
+#include "page.h"
 
 #define SEC_BITS		(20UL)
 #define SEC_SIZE		(1UL << SEC_BITS)
@@ -39,7 +36,7 @@ int printk(const char *fmt, ...);
 
 struct boot_args {
 	uintptr_t rootfs_start;
-	size_t rootfs_size;
+	uintptr_t rootfs_end;
 };
 
 #endif

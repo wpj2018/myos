@@ -2,7 +2,9 @@
 #include "mm.h"
 #include "task.h"
 
-uchar init_stack[TASK_STACK_SIZE] __attribute__((__section__(".init.stack")));
+union ctx_union init_ctx __attribute__((__section__(".init.stack"))) = {
+	{.task = &init_task,}
+};
 
 int task_comp(struct rb_node *n1, struct rb_node *n2)
 {
@@ -15,16 +17,18 @@ int task_comp(struct rb_node *n1, struct rb_node *n2)
 }
 
 struct rb_tree init_rbtree = {
-	.root = NULL,
+	.root = &init_task.rb_node,
 	.comp = task_comp,
 };
 
 struct task_struct init_task = {
-	.stack = &init_stack[0],
+	.name = "init",
+	.ctx = &init_ctx.ctx,
 	.rb_tree = &init_rbtree,
+	.rb_node.color = RB_COLOR_BLACK,
 };
 
-size_t g_task_cnt = 1;
+size_t g_task_cnt = 0;
 struct task_struct g_task_list[3];
 
 void task1(void)
@@ -44,7 +48,7 @@ void task2(void)
 struct task_struct *task_create(char *name, void *func)
 {
 	struct task_struct *task = &g_task_list[g_task_cnt];
-	struct context *ctx = (struct context *)vmalloc(TASK_STACK_SIZE);
+	struct context *ctx = (struct context *)kalloc(TASK_STACK_SIZE);
 
 	task->rb_tree = &init_rbtree;
 	task->ctx = ctx;
@@ -52,6 +56,8 @@ struct task_struct *task_create(char *name, void *func)
 	task->name = name;
 
 	rb_insert(task->rb_tree, &task->rb_node);
+
+	memset(&ctx->regs, 0, sizeof(ctx->regs));
 
 	ctx->regs.pc = (uintptr_t)func;
 	ctx->task = task;
@@ -74,9 +80,6 @@ struct task_struct *get_current(void)
 
 void task_init(void)
 {
-	init_task.ctx->task = &init_task;
-	rb_insert(init_task.rb_tree, &init_task.rb_node);
-
 	task_create("task1", &task1);
 	task_create("task2", &task2);
 }

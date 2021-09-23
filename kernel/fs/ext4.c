@@ -179,7 +179,7 @@ void ext4_init(void)
 	struct ext4_inode *root = &itables[EXT4_ROOT_INO - 1];
 	struct ext4_dentry *dentry = ext4_get_dentry(sb, root, "verify.bin");
 	struct ext4_inode *inode = &itables[dentry->inode - 1];
-	char *buf = vmalloc(0);
+	char *buf = kalloc(PAGE_SIZE);
 
 	for (size_t i = 0; i < inode->i_size_lo; i += 4096) {
 		ext4_read_file(sb, inode, buf, i, 4096);

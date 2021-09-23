@@ -16,7 +16,18 @@ typedef __u64  __le64;
 
 #define NULL ((void *)0)
 #define null ((void *)0)
+#define false 0
+#define true  1
 
-#define BYTES_PER_UCHAR		(8UL)
+#define BITS_PER_BYTE		(8UL)
+
+#ifndef offsetof
+#define offsetof(TYPE, MEMBER) ((size_t) &((TYPE *)0)->MEMBER)
+#endif
+
+#define container_of(ptr, type, member) ({			\
+	const typeof( ((type *)0)->member ) *__mptr = (ptr);	\
+	(type *)( (char *)__mptr - offsetof(type,member) );})
+
 
 #endif
