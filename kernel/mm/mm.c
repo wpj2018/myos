@@ -1,5 +1,6 @@
 #include "bootmem.h"
 #include "buddy.h"
+#include "slab.h"
 #include "mm.h"
 
 extern uintptr_t _end;
@@ -123,13 +124,7 @@ void *vmalloc(size_t size)
 
 void *kalloc(size_t size)
 {
-	struct page *page;
-
-	page = buddy_alloc_pages(size);
-	if (page != NULL) {
-		return (void *)__PA_VA__(page_to_phy(page));
-	}
-	return NULL;
+	return slab_alloc(size);
 }
 
 void kfree(void *vaddr)
@@ -146,4 +141,5 @@ void mm_init(void)
 	buddy_init();
 	bootmem_free_to_buddy();
 	buddy_stat();
+	slab_init();
 }

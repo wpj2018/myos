@@ -6,8 +6,10 @@
 
 struct page {
 	struct dlist_node dnode;
+	void *free_list;
 	size_t order: 4;
 	size_t in_buddy: 1;
+	size_t free_slots: 12;
 };
 
 extern struct page *g_mem_pages;
@@ -26,5 +28,8 @@ extern struct page *g_mem_pages;
 
 #define page_to_phy(page)	(pfn_to_phy(page_to_pfn(page)))
 #define phy_to_page(paddr)	(pfn_to_page(phy_to_pfn(paddr)))
+
+#define virt_to_page(vaddr)	(phy_to_page(__VA_PA__(vaddr)))
+#define page_to_virt(page)	(__PA_VA__(page_to_phy(page)))
 
 #endif
