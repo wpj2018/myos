@@ -26,10 +26,10 @@ struct task_struct init_task = {
 	.ctx = &init_ctx.ctx,
 	.rb_tree = &init_rbtree,
 	.rb_node.color = RB_COLOR_BLACK,
+	.rb_node.parent = NULL,
+	.rb_node.left = NULL,
+	.rb_node.right = NULL,
 };
-
-size_t g_task_cnt = 0;
-struct task_struct g_task_list[3];
 
 void task1(void)
 {
@@ -44,10 +44,28 @@ void task2(void)
 		printk("run task2\n");
 	}
 }
+void task3(void)
+{
+	while (1) {
+		printk("run task3\n");
+	}
+}
+void task4(void)
+{
+	while (1) {
+		printk("run task4\n");
+	}
+}
+void task5(void)
+{
+	while (1) {
+		printk("run task5\n");
+	}
+}
 
 struct task_struct *task_create(char *name, void *func)
 {
-	struct task_struct *task = &g_task_list[g_task_cnt];
+	struct task_struct *task = (struct task_struct *)kalloc(sizeof(struct task_struct));
 	struct context *ctx = (struct context *)kalloc(TASK_STACK_SIZE);
 
 	task->rb_tree = &init_rbtree;
@@ -55,15 +73,13 @@ struct task_struct *task_create(char *name, void *func)
 	task->ticks = 10;
 	task->name = name;
 
-	rb_insert(task->rb_tree, &task->rb_node);
-
 	memset(&ctx->regs, 0, sizeof(ctx->regs));
 
 	ctx->regs.pc = (uintptr_t)func;
 	ctx->task = task;
 	ctx->regs.sp = (uintptr_t)(&task->stack[TASK_STACK_SIZE]);
 
-	g_task_cnt++;
+	rb_insert(task->rb_tree, &task->rb_node);
 
 	return task;
 }
@@ -82,4 +98,7 @@ void task_init(void)
 {
 	task_create("task1", &task1);
 	task_create("task2", &task2);
+	task_create("task3", &task3);
+	task_create("task4", &task4);
+	task_create("task5", &task5);
 }

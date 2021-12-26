@@ -1,7 +1,7 @@
 #ifndef __PAGE_H
 #define __PAGE_H
 
-#include "types.h"
+#include "kernel.h"
 #include "dlist.h"
 
 struct page {

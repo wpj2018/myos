@@ -26,5 +26,6 @@ void bootmem_init(struct boot_args *args);
 void *bootmem_alloc(void);
 void bootmem_free(uintptr_t paddr);
 void bootmem_free_to_buddy(void);
+bool bootmem_is_work(void);
 
 #endif

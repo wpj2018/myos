@@ -2,11 +2,6 @@
 #define __KERNEL_H
 
 #include "string.h"
-#include "page.h"
-
-#define SEC_BITS		(20UL)
-#define SEC_SIZE		(1UL << SEC_BITS)
-#define SEC_MASK		(SEC_SIZE - 1)
 
 #define PHY_RAM_BASE		0x60000000
 #define PHY_RAM_END		0xA0000000
@@ -28,11 +23,14 @@
 #define PHY_RAMDISK_BASE	0x80100000
 #define VIRT_RAMDISK_BASE	(__PA_VA__(PHY_RAMDISK_BASE))
 
-#define END_MEM			(~0UL)
-#define HIGHMEM_BASE		(END_MEM - 128 * SEC_SIZE + 1)
-
-
 int printk(const char *fmt, ...);
+#define PANIC(condition, msg) do 					\
+{									\
+	if (condition) {						\
+		printk("ERROR:%s:%d, %s\n",  __func__, __LINE__, msg);	\
+		asm("b .");						\
+	}								\
+} while (0)
 
 struct boot_args {
 	uintptr_t rootfs_start;
