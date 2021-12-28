@@ -107,6 +107,7 @@ void *slab_alloc(size_t size)
 	}
 	page = buddy_alloc_pages(size);
 	if (page != NULL) {
+		page->in_slab = 1;
 		dlist_add(&g_slab_page_list, &page->dnode);
 		slab_make_slots(page);
 		ret = slab_alloc_slot(page, req_units);

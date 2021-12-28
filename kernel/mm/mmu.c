@@ -54,12 +54,8 @@ static uintptr_t phy_zalloc_page(void)
 	if (bootmem_is_work()) {
 		phy_page = (uintptr_t)bootmem_alloc();
 	} else {
-		page = buddy_alloc_pages(PAGE_SIZE);
-		PANIC(page == NULL, "buddy no mem\n");
-		phy_page = (uintptr_t)page_to_phy(page);
+		phy_page = __VA_PA__(kzalloc(PAGE_SIZE));
 	}
-	PANIC(phy_page == 0, "phy_page is 0\n");
-	memset((void *)__PA_VA__(phy_page), 0, PAGE_SIZE);
 
 	return phy_page;
 }

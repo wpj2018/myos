@@ -9,6 +9,7 @@ struct page {
 	void *free_list;
 	size_t order: 4;
 	size_t in_buddy: 1;
+	size_t in_slab: 1;
 	size_t free_slots: 12;
 };
 

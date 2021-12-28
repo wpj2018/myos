@@ -113,6 +113,7 @@ void *bootmem_alloc(void)
 		paddr = g_mem_info.min_addr + idx * PAGE_SIZE;
 		bitmap_set(paddr, paddr + PAGE_SIZE, 1);
 	}
+	memset((void *)__PA_VA__(paddr), 0, PAGE_SIZE);
 	return (void *)paddr;
 }
 
