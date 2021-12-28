@@ -242,4 +242,7 @@ struct ext4_dentry *ext4_get_dentry(struct ext4_super_block *sb, struct ext4_ino
 void ext4_read_file(struct ext4_super_block *sb, struct ext4_inode *inode, void *buf, size_t pos, size_t count);
 void ext4_init(void);
 
+void ext4_stat(char *filename, struct vfs_stat *stat);
+void ext4_read(char *filename, char *buf, size_t count);
+
 #endif

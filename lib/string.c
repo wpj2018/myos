@@ -50,19 +50,49 @@ void swap(char *buf, size_t n)
 	}
 }
 
-char *tostr(char *buf, size_t n)
+char *to_hex(char *buf, size_t n)
 {
 	size_t cnt = 0;
-	if (n == 0) {
-		buf[cnt++] = '0';
-	}
-	while (n) {
-		buf[cnt++] = n % 10 + '0';
-		n /= 10;
-	}
+	int c;
+
+	do {
+		c = n & 0x0f;
+		if (c >= 10) {
+			buf[cnt++] = c - 10 + 'A';
+		} else {
+			buf[cnt++] = c + '0';
+		}
+		n >>= 4;
+	} while (n);
+
+	buf[cnt++] = 'x';
+	buf[cnt++] = '0';
+
 	swap(buf, cnt);
 	buf[cnt] = '\0';
 	return buf;
+}
+
+char *to_decimal(char *buf, size_t n)
+{
+	size_t cnt = 0;
+
+	do {
+		buf[cnt++] = n % 10 + '0';
+		n /= 10;
+	} while (n);
+
+	swap(buf, cnt);
+	buf[cnt] = '\0';
+	return buf;
+}
+
+char *tostr(char *buf, size_t n, size_t base)
+{
+	if (base == 16) {
+		return to_hex(buf, n);
+	}
+	return to_decimal(buf, n);
 }
 
 int vsprintf(char *str, const char *format, va_list args)
@@ -80,14 +110,10 @@ int vsprintf(char *str, const char *format, va_list args)
 		if (!p) {
 			break;
 		}
-		if (*p != 's' && *p != 'd') {
-			/* TODO: */
-			return -1;
-		}
-		if (*p == 'd') {
-			tmp = tostr(&buf[0], va_arg(args, int));
-		} else {
+		if (*p == 's') {
 			tmp = va_arg(args, char *);
+		} else {
+			tmp = tostr(&buf[0], va_arg(args, int), *p == 'x' ? 16 : 10);
 		}
 		while (tmp && *tmp != '\0') {
 			*str++ = *tmp++;

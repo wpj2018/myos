@@ -2,9 +2,14 @@
 #include "task.h"
 #include "rbtree.h"
 #include "sched.h"
+#include "preempt.h"
+#include "printk.h"
 
 struct task_struct *sched_next()
 {
+	if (current->preempt_cnt > 0) {
+		return current;
+	}
 	struct task_struct *task = NULL;
 	struct rb_node *rb_node = rb_max_node(current->rb_tree);
 

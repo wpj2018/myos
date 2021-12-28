@@ -16,14 +16,17 @@ struct task_struct {
 		struct context *ctx;
 		uchar *stack;
 	};
+	size_t *pgd;
 	struct rb_tree *rb_tree;
 	struct rb_node rb_node;
 	size_t ticks;
+	int preempt_cnt;
 	char *name;
 };
 
 struct task_struct *get_current();
-struct task_struct *task_create(char *name, void *func);
+struct task_struct *task_create(char *name);
+void run_task(struct task_struct *task, void *entry);
 void task_init(void);
 
 #define current (get_current())

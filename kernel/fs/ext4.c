@@ -1,4 +1,5 @@
 #include "kernel.h"
+#include "string.h"
 #include "mm.h"
 #include "ext4.h"
 
@@ -193,4 +194,28 @@ void ext4_init(void)
 		}
 	}
 	printk("ext4 check success !!!\n");
+}
+
+void ext4_stat(char *filename, struct vfs_stat *stat)
+{
+	struct ext4_super_block *sb = (struct ext4_super_block *)(VIRT_RAMDISK_BASE + EXT4_SB_OFFSET);
+	struct ext4_inode *itables = ext4_get_itable(sb);
+	struct ext4_inode *root = &itables[EXT4_ROOT_INO - 1];
+	struct ext4_dentry *dentry = ext4_get_dentry(sb, root, filename);
+	struct ext4_inode *inode = &itables[dentry->inode - 1];
+
+	stat->st_size = inode->i_size_lo;
+}
+
+void ext4_read(char *filename, char *buf, size_t count)
+{
+	struct ext4_super_block *sb = (struct ext4_super_block *)(VIRT_RAMDISK_BASE + EXT4_SB_OFFSET);
+	struct ext4_inode *itables = ext4_get_itable(sb);
+	struct ext4_inode *root = &itables[EXT4_ROOT_INO - 1];
+	struct ext4_dentry *dentry = ext4_get_dentry(sb, root, filename);
+	struct ext4_inode *inode = &itables[dentry->inode - 1];
+
+	for (size_t i = 0; i < inode->i_size_lo && i < count; i += 4096) {
+		ext4_read_file(sb, inode, &buf[i], i, 4096);
+	}
 }

@@ -1,6 +1,8 @@
 #ifndef __FS_H
 #define __FS_H
 
+#include "types.h"
+
 #define S_IXOTH		0x1
 #define S_IWOTH		0x2
 #define S_IROTH		0x4
@@ -21,6 +23,13 @@
 #define S_IFLNK		0xA000
 #define S_IFSOCK	0xC000
 
+struct vfs_stat {
+	size_t st_size;
+};
+
+void vfs_stat(char *filename, struct vfs_stat *stat);
+void vfs_read(char *filename, char *buf, size_t count);
 void fs_init(void);
+
 
 #endif

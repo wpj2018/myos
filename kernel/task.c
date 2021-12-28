@@ -1,6 +1,8 @@
 #include "kernel.h"
+#include "string.h"
 #include "mm.h"
 #include "task.h"
+#include "preempt.h"
 
 union ctx_union init_ctx __attribute__((__section__(".init.stack"))) = {
 	{.task = &init_task,}
@@ -29,6 +31,7 @@ struct task_struct init_task = {
 	.rb_node.parent = NULL,
 	.rb_node.left = NULL,
 	.rb_node.right = NULL,
+	.pgd = (size_t *)VIRT_PT_BASE,
 };
 
 void task1(void)
@@ -44,44 +47,34 @@ void task2(void)
 		printk("run task2\n");
 	}
 }
-void task3(void)
-{
-	while (1) {
-		printk("run task3\n");
-	}
-}
-void task4(void)
-{
-	while (1) {
-		printk("run task4\n");
-	}
-}
-void task5(void)
-{
-	while (1) {
-		printk("run task5\n");
-	}
-}
 
-struct task_struct *task_create(char *name, void *func)
+struct task_struct *task_create(char *name)
 {
-	struct task_struct *task = (struct task_struct *)kalloc(sizeof(struct task_struct));
+	struct task_struct *task = (struct task_struct *)kzalloc(sizeof(struct task_struct));
 	struct context *ctx = (struct context *)kalloc(TASK_STACK_SIZE);
 
-	task->rb_tree = &init_rbtree;
 	task->ctx = ctx;
 	task->ticks = 10;
 	task->name = name;
+	task->pgd = kzalloc(4 * PAGE_SIZE);
+	memcpy(task->pgd, init_task.pgd, 4 * PAGE_SIZE);
 
 	memset(&ctx->regs, 0, sizeof(ctx->regs));
 
-	ctx->regs.pc = (uintptr_t)func;
 	ctx->task = task;
 	ctx->regs.sp = (uintptr_t)(&task->stack[TASK_STACK_SIZE]);
 
-	rb_insert(task->rb_tree, &task->rb_node);
-
 	return task;
+}
+
+void run_task(struct task_struct *task, void *entry)
+{
+	task->ctx->regs.pc = (uintptr_t)entry;
+
+	preempt_disable();
+	task->rb_tree = &init_rbtree;
+	rb_insert(&init_rbtree, &task->rb_node);
+	preempt_enable();
 }
 
 struct task_struct *get_current(void)
@@ -96,9 +89,8 @@ struct task_struct *get_current(void)
 
 void task_init(void)
 {
-	task_create("task1", &task1);
-	task_create("task2", &task2);
-	task_create("task3", &task3);
-	task_create("task4", &task4);
-	task_create("task5", &task5);
+	struct task_struct *t1 = task_create("task1");
+	struct task_struct *t2 = task_create("task2");
+	run_task(t1, &task1);
+	run_task(t2, &task2);
 }

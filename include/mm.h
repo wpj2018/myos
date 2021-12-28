@@ -1,6 +1,8 @@
 #ifndef __MM_H
 
 #include "page.h"
+#include "printk.h"
+#include "buddy.h"
 
 #define SEC_BITS		(20UL)
 #define SEC_SIZE		(1UL << SEC_BITS)
@@ -44,5 +46,6 @@ void *vmalloc(size_t size);
 void *kalloc(size_t size);
 void *kzalloc(size_t size);
 void kfree(void *vaddr);
+void map_page(size_t *pgd, uintptr_t vaddr, uintptr_t paddr, size_t perm);
 
 #endif

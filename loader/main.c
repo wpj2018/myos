@@ -1,4 +1,6 @@
 #include "kernel.h"
+#include "string.h"
+#include "bootarg.h"
 #include "mm.h"
 
 void main(void)

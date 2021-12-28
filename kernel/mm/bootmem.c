@@ -1,3 +1,4 @@
+#include "string.h"
 #include "buddy.h"
 #include "mm.h"
 #include "bootmem.h"

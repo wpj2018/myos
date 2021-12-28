@@ -1,4 +1,5 @@
 #include "kernel.h"
+#include "string.h"
 
 volatile char *g_uart = (volatile char *)(VIRT_UART_BASE);
 

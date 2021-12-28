@@ -5,6 +5,7 @@
 #include "task.h"
 #include "fs.h"
 #include "test.h"
+#include "proc.h"
 
 const char logo[] = "hello myos !!!\n";
 int start_kernel(struct boot_args *args)

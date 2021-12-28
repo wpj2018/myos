@@ -2,6 +2,8 @@
 #define __BOOTMEM_H
 
 #include "kernel.h"
+#include "types.h"
+#include "bootarg.h"
 
 #define NR_BANKS 5
 

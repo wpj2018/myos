@@ -1,3 +1,4 @@
+#include "string.h"
 #include "bootmem.h"
 #include "buddy.h"
 #include "slab.h"
@@ -19,7 +20,7 @@ void *kalloc(size_t size)
 		*(size_t *)ret = size;
 		ret += SLAB_HEAD_SIZE;
 	} else {
-		page = buddy_alloc_pages(PAGE_SIZE);
+		page = buddy_alloc_pages(size);
 		PANIC(page == NULL, "buddy no mem");
 		ret = (void *)page_to_virt(page);
 	}

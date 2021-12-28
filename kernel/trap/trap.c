@@ -1,10 +1,12 @@
 #include "kernel.h"
+#include "string.h"
 #include "mm.h"
 #include "arch.h"
 #include "gic.h"
 #include "timer.h"
 #include "sched.h"
 #include "trap.h"
+#include "preempt.h"
 
 size_t irq_stack[4];
 size_t abt_stack[4];
@@ -18,13 +20,12 @@ struct task_struct *svc_hdl()
 
 struct task_struct *dabt_hdl()
 {
-	printk("------catch data abort-------\n");
+	PANIC(1, "------catch data abort -------\n");
 	return current;
 }
 
 struct task_struct *irq_hdl()
 {
-//	printk("------catch irq-------\n");
 	struct task_struct *task;
 	size_t ack_no = gicc_get_ack();
 	timer_clear_int1();

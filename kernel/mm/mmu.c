@@ -60,18 +60,18 @@ static uintptr_t phy_zalloc_page(void)
 	return phy_page;
 }
 
-static void map_page(uintptr_t vaddr, uintptr_t paddr, size_t perm)
+void map_page(size_t *pgd, uintptr_t vaddr, uintptr_t paddr, size_t perm)
 {
 	size_t l1_idx = vaddr >> SEC_BITS;
 	size_t l2_idx = (vaddr >> PAGE_BITS) & 0xff;
 	size_t mmu_flags = PT_TYPE_SMALL | PT_B | PT_C | perm;
 	uintptr_t phy_page = 0;
 
-	if (!g_pt_base[l1_idx]) {
+	if (!pgd[l1_idx]) {
 		phy_page = phy_zalloc_page();
-		g_pt_base[l1_idx] = phy_page | PMD_TYPE_PT | DOMAIN_KERNEL_IDX;
+		pgd[l1_idx] = phy_page | PMD_TYPE_PT | DOMAIN_KERNEL_IDX;
 	} else {
-		phy_page = g_pt_base[l1_idx] & PAGE_MASK;
+		phy_page = pgd[l1_idx] & PAGE_MASK;
 	}
 	uintptr_t *page_table = (uintptr_t *)__PA_VA__(phy_page);
 	if (!page_table[l2_idx]) {
@@ -111,13 +111,13 @@ void paging_init(void)
 	clear_secs(0, VIRT_KERNEL_BASE);
 	clear_secs(VIRT_HIGHMEM_BASE, VIRT_END_MEM - VIRT_HIGHMEM_BASE + 1);
 
-	map_page(VIRT_UART_BASE, PHY_UART_BASE, PT_AP_RW);
+	map_page((size_t *)VIRT_PT_BASE, VIRT_UART_BASE, PHY_UART_BASE, PT_AP_RW);
 	/* why set read-only does not work */
-	map_page(VIRT_VECTOR_BASE, PHY_VECTOR_BASE, PT_AP_RD);
+	map_page((size_t *)VIRT_PT_BASE, VIRT_VECTOR_BASE, PHY_VECTOR_BASE, PT_AP_RD);
 }
 
 void *ioremap(uintptr_t phys_addr)
 {
-	map_page(phys_addr, phys_addr, PT_AP_RW);
+	map_page((size_t *)VIRT_PT_BASE, phys_addr, phys_addr, PT_AP_RW);
 	return (void*)phys_addr;
 }

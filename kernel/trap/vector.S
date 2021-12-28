@@ -1,4 +1,5 @@
 #include "arch.h"
+#include "kernel.h"
 
 .section ".vector.init", #alloc, #execinstr
 __vector_start:
@@ -72,6 +73,11 @@ handler_start:
 	ldr pc, [r1]
 
 ret_to_usr:
+	// switch page table
+	ldr r7, [r0, #4]
+	sub r7, r7, #VA_PA_OFF
+	mcr p15, 0, r7, c2, c0, 0
+
 	ldr r7, [r0]
 	ldr r0, [r7, #4 * (REG_NUM - 1)]
 	msr spsr, r0
