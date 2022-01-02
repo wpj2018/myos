@@ -1,6 +1,7 @@
 #ifndef __SYSCALL_H
 #define __SYSCALL_H
 
-#define printf(x)	asm("svc #0")
+/* kernel/printk.c */
+#define __NR_syslog 116
 
 #endif

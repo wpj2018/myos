@@ -1,11 +1,9 @@
 #ifndef __TYPES_H
 #define __TYPES_H
 
-#include <stdarg.h>
-#include <stddef.h>
-#include <stdint.h>
-#include <stddef.h>
+#include "stdarg.h"
 
+typedef unsigned long uintptr_t;
 typedef unsigned int size_t;
 typedef unsigned char uchar;
 typedef int bool;
