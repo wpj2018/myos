@@ -20,6 +20,7 @@ int start_kernel(struct boot_args *args)
 	module_init();
 	test_main();
 	task_init();
+	run_init_process("init.elf");
 
 	while(1) {
 	//	printk("sleep\n");
