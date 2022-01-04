@@ -1,3 +1,4 @@
+#include "stdio.h"
 #include "rbtree.h"
 #include "test.h"
 
@@ -25,15 +26,15 @@ void rb_show(struct rb_tree *tree)
 	while (front < tail) {
 		struct rb_node *cur = que[front++];
 		struct tnode *t = container_of(cur, struct tnode, rb_node);
-		printk("key = %d color = %s", t->key, cur->color ? "black":"red");
+		printf("key = %d color = %s", t->key, cur->color ? "black":"red");
 		if (cur->parent) {
 			if (cur->parent->left == cur) {
-				printk(" p = %d left", container_of(cur->parent, struct tnode, rb_node)->key);
+				printf(" p = %d left", container_of(cur->parent, struct tnode, rb_node)->key);
 			} else {
-				printk(" p = %d right", container_of(cur->parent, struct tnode, rb_node)->key);
+				printf(" p = %d right", container_of(cur->parent, struct tnode, rb_node)->key);
 			}
 		}
-		printk("\n");
+		printf("\n");
 		if (cur->left) {
 			que[tail++] = cur->left;
 		}
@@ -45,7 +46,7 @@ void rb_show(struct rb_tree *tree)
 
 void test_rbtree(void)
 {
-	printk("------------test rb_tree begin------------\n");
+	printf("------------test rb_tree begin------------\n");
 
 	struct rb_tree tree = {
 		.root = NULL,
@@ -55,14 +56,14 @@ void test_rbtree(void)
 	struct tnode nodes[20] = {0};
 	for (int i = 0; i < 8; i++) {
 		nodes[i].key = i;
-		printk("rb insert %d\n", nodes[i].key);
+		printf("rb insert %d\n", nodes[i].key);
 		rb_insert(&tree, &nodes[i].rb_node);
 		rb_show(&tree);
 	}
 	for (int i = 0; i < 8; i++) {
-		printk("rb delete %d\n", nodes[i].key);
+		printf("rb delete %d\n", nodes[i].key);
 		rb_delete(&tree, &nodes[i].rb_node);
 		rb_show(&tree);
 	}
-	printk("------------test rb_tree end------------\n");
+	printf("------------test rb_tree end------------\n");
 }

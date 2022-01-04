@@ -1,10 +1,11 @@
-TARGET := libc.a
+TARGET := $(notdir $(CURDIR)).elf
+LDFLAGS += -T ../uapps.ld.s
 
-SOURCE = $(wildcard *.c *.S)
+SOURCE = $(wildcard *.c init/*.S)
 OBJS = $(patsubst %.c,%.o,$(SOURCE:.S=.o))
 
 ${TARGET} : ${OBJS}
-	${AR} -rcs $@ $^
+	${LD} $^ -o $@ ${LDFLAGS}
 %.o : %.c
 	${CC} ${CFLAGS} -c $< -o $@
 %.o : %.S

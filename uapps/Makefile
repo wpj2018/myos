@@ -1,18 +1,13 @@
-include ../toolchain.mk
+DIRS := init tests
 
-TARGET := init.elf
-CFLAGS := -g -I../include -fno-stack-protector
-LDFLAGS := -T uapps.ld.s -lc -L../lib/
-
-SOURCE = $(wildcard *.c *.S)
-OBJS = $(patsubst %.c,%.o,$(SOURCE:.S=.o))
-
-${TARGET} : ${OBJS}
-	${LD} $^ -o $@ ${LDFLAGS}
-%.o : %.c
-	${CC} ${CFLAGS} -c $< -o $@
-%.o : %.S
-	${CC} ${CFLAGS} -c $< -o $@
+all:
+	for dir in ${DIRS}; do				\
+		cp Makefile.base $$dir/Makefile;	\
+		make -C $$dir;				\
+	done
 
 clean:
-	rm -rf ${TARGET} ${OBJS}
+	for dir in ${DIRS}; do		\
+		make -C $$dir clean;	\
+		rm -rf $$dir/Makefile;	\
+	done

@@ -19,7 +19,6 @@ int start_kernel(struct boot_args *args)
 	fs_init();
 	trap_init();
 	module_init();
-	test_main();
 	task_init();
 	run_init_process("init.elf");
 

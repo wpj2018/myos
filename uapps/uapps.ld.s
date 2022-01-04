@@ -1,5 +1,3 @@
-INCLUDE ../defconfig
-
 OUTPUT_ARCH(arm)
 ENTRY(main)
 SECTIONS

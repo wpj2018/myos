@@ -1,6 +1,7 @@
 #include "test.h"
 
-void test_main(void)
+int main(void)
 {
 	test_rbtree();
+	return 0;
 }

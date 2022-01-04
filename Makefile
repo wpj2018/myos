@@ -1,4 +1,5 @@
-DIRS := lib tests kernel uapps rootfs loader
+include toolchain.mk
+DIRS := lib kernel uapps rootfs loader
 
 bootimage:
 	for dir in ${DIRS}; do		\

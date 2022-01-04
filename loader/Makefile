@@ -1,8 +1,5 @@
-include ../toolchain.mk
-
 TARGET := bootimage
-CFLAGS := -g -I../include -fno-stack-protector
-LDFLAGS := -T loader.ld.s -lc -L../lib
+LDFLAGS += -T loader.ld.s
 SEC_FLAG := --add-section .archive=kernel --set-section-flags .archive=alloc
 SEC_FLAG += --add-section .rootfs=rootfs --set-section-flags .rootfs=alloc
 
