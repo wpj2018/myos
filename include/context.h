@@ -32,8 +32,15 @@ struct sys_regs {
 };
 
 struct context {
-	struct sys_regs regs;
-	struct task_struct *task;
+	union {
+		struct {
+			struct sys_regs regs;
+			size_t *pgd;
+			struct task_struct *task;
+		};
+		char padding[TASK_STACK_SIZE];
+	};
+	char stack[0];
 };
 
 #endif

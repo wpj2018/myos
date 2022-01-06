@@ -4,6 +4,9 @@
 #include "printk.h"
 #include "buddy.h"
 
+#define VIRT_END_MEM		(~0UL)
+#define VIRT_HIGHMEM_BASE	(VIRT_END_MEM - 128 * SEC_SIZE + 1)
+
 #define SEC_BITS		(20UL)
 #define SEC_SIZE		(1UL << SEC_BITS)
 #define SEC_MASK		(~(SEC_SIZE - 1))
@@ -17,7 +20,7 @@
 #define PT_TYPE_SMALL		(3UL << 0)
 #define PT_B			(1UL << 2)
 #define PT_C			(1UL << 3)
-#define PT_AP_RW		(1UL << 4)
+#define PT_AP_RW		(1UL << 4 | 1UL << 5)
 #define PT_AP_RD		((1UL << 9) | (3UL << 4))
 
 #define SCTLR_M			(1UL << 0)
@@ -25,18 +28,17 @@
 #define SCTLR_C			(1UL << 2)
 #define SCTLR_V			(1UL << 13)
 
-#define DOMAIN_KERNEL_IDX	(0UL)
-#define DOMAIN_USER_IDX		(1UL)
+#define DOMAIN_KERN_ID		(0UL)
+#define DOMAIN_USER_ID		(1UL)
 
 #define DOMAIN_CLIENT		(1UL << 0)
 #define DOMAIN_MANAGER		(3UL << 0)
 
 #define __DOMAIN__(idx, flag)	(flag << (idx << 1))
+#define DOMAIN_DACR		(__DOMAIN__(DOMAIN_KERN_ID, DOMAIN_CLIENT) |\
+				 __DOMAIN__(DOMAIN_USER_ID, DOMAIN_CLIENT))
 
-#define PMD_SEC_FLAGS		(PMD_TYPE_SEC | PMD_SEC_B | PMD_SEC_C | PMD_SEC_AP_RW | DOMAIN_KERNEL_IDX)
-
-#define VIRT_END_MEM		(~0UL)
-#define VIRT_HIGHMEM_BASE	(VIRT_END_MEM - 128 * SEC_SIZE + 1)
+#define PMD_SEC_FLAGS		(PMD_TYPE_SEC | PMD_SEC_B | PMD_SEC_C | PMD_SEC_AP_RW | DOMAIN_KERN_ID)
 
 
 void mm_init(void);
@@ -46,6 +48,6 @@ void *vmalloc(size_t size);
 void *kalloc(size_t size);
 void *kzalloc(size_t size);
 void kfree(void *vaddr);
-void map_page(size_t *pgd, uintptr_t vaddr, uintptr_t paddr, size_t perm);
+void map_page(size_t *pgd, uintptr_t vaddr, uintptr_t paddr, size_t perm, size_t domain_id);
 
 #endif

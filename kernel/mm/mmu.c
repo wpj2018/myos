@@ -60,7 +60,7 @@ static uintptr_t phy_zalloc_page(void)
 	return phy_page;
 }
 
-void map_page(size_t *pgd, uintptr_t vaddr, uintptr_t paddr, size_t perm)
+void map_page(size_t *pgd, uintptr_t vaddr, uintptr_t paddr, size_t perm, size_t domain_id)
 {
 	size_t l1_idx = vaddr >> SEC_BITS;
 	size_t l2_idx = (vaddr >> PAGE_BITS) & 0xff;
@@ -69,7 +69,7 @@ void map_page(size_t *pgd, uintptr_t vaddr, uintptr_t paddr, size_t perm)
 
 	if (!pgd[l1_idx]) {
 		phy_page = phy_zalloc_page();
-		pgd[l1_idx] = phy_page | PMD_TYPE_PT | DOMAIN_KERNEL_IDX;
+		pgd[l1_idx] = phy_page | PMD_TYPE_PT | (domain_id << 5);
 	} else {
 		phy_page = pgd[l1_idx] & PAGE_MASK;
 	}
@@ -84,7 +84,7 @@ static void enable_mmu(void)
 	asm volatile (
 		"mcr p15, 0, %0, c3, c0, 0"
 		:
-		: "r"(__DOMAIN__(DOMAIN_KERNEL_IDX, DOMAIN_CLIENT))
+		: "r"(DOMAIN_DACR)
 	);
 	asm volatile (
 		"mcr p15, 0, %0, c2, c0, 0"
@@ -111,13 +111,13 @@ void paging_init(void)
 	clear_secs(0, VIRT_KERNEL_BASE);
 	clear_secs(VIRT_HIGHMEM_BASE, VIRT_END_MEM - VIRT_HIGHMEM_BASE + 1);
 
-	map_page((size_t *)VIRT_PT_BASE, VIRT_UART_BASE, PHY_UART_BASE, PT_AP_RW);
+	map_page((size_t *)VIRT_PT_BASE, VIRT_UART_BASE, PHY_UART_BASE, PT_AP_RW, DOMAIN_KERN_ID);
 	/* why set read-only does not work */
-	map_page((size_t *)VIRT_PT_BASE, VIRT_VECTOR_BASE, PHY_VECTOR_BASE, PT_AP_RD);
+	map_page((size_t *)VIRT_PT_BASE, VIRT_VECTOR_BASE, PHY_VECTOR_BASE, PT_AP_RD, DOMAIN_KERN_ID);
 }
 
 void *ioremap(uintptr_t phys_addr)
 {
-	map_page((size_t *)VIRT_PT_BASE, phys_addr, phys_addr, PT_AP_RW);
+	map_page((size_t *)VIRT_PT_BASE, phys_addr, phys_addr, PT_AP_RW, DOMAIN_KERN_ID);
 	return (void*)phys_addr;
 }

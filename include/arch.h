@@ -5,7 +5,7 @@
 #define MASK_I		(1 << 7)
 #define MASK_F		(1 << 6)
 
-#define MODE_USER	0b10000
+#define MODE_USR	0b10000
 #define MODE_FIQ	0b10001
 #define MODE_IRQ	0b10010
 #define MODE_SVC	0b10011
@@ -17,5 +17,9 @@
 
 #define REG_NUM		17
 #define TASK_STACK_SIZE	4096
+
+#define ENTRY(name)		\
+	.global name;		\
+	name:			\
 
 #endif

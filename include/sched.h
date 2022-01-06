@@ -3,6 +3,7 @@
 
 #include "task.h"
 
-struct task_struct *sched_next();
+extern void __switch_to(struct context *prev, struct context *next);
+void schedule(void);
 
 #endif

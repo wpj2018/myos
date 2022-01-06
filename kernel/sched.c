@@ -5,7 +5,7 @@
 #include "preempt.h"
 #include "printk.h"
 
-struct task_struct *sched_next()
+static struct task_struct *sched_next(void)
 {
 	if (current->preempt_cnt > 0) {
 		return current;
@@ -22,4 +22,13 @@ struct task_struct *sched_next()
 	}
 
 	return task;
+}
+
+void schedule(void)
+{
+	struct task_struct *task = NULL;
+	task = sched_next();
+	if (task != current) {
+		__switch_to(current->ctx, task->ctx);
+	}
 }

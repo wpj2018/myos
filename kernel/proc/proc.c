@@ -5,6 +5,14 @@
 #include "task.h"
 #include "proc.h"
 
+void *proc_map_stack(struct task_struct *task, size_t stack_size)
+{
+	uintptr_t vaddr = (uintptr_t)(0x80000000);
+	uintptr_t kaddr = (uintptr_t)kzalloc(stack_size);
+	map_page(task->ctx->pgd, vaddr, __VA_PA__(kaddr), PT_AP_RW, DOMAIN_USER_ID);
+	return (void *)(vaddr + stack_size);
+}
+
 void proc_map_phdr(struct task_struct *task, struct elf32_phdr *phdr, void *buf)
 {
 	size_t mem_sz = PAGE_ALIGN(phdr->p_memsz);
@@ -15,11 +23,11 @@ void proc_map_phdr(struct task_struct *task, struct elf32_phdr *phdr, void *buf)
 
 	memcpy((void *)page_to_virt(pages), buf + phdr->p_offset, file_sz);
 	for (size_t i = 0; i < nr_pages; i++, vaddr += PAGE_SIZE) {
-		map_page(task->pgd, vaddr, page_to_phy(&pages[i]), PT_AP_RW);
+		map_page(task->ctx->pgd, vaddr, page_to_phy(&pages[i]), PT_AP_RW, DOMAIN_USER_ID);
 	}
 }
 
-void run_init_process(char *init_name)
+void do_spawn(char *proc_name)
 {
 	struct vfs_stat stat;
 	struct elf32_ehdr ehdr;
@@ -28,13 +36,13 @@ void run_init_process(char *init_name)
 	void *buf;
 	void *ptr;
 
-	task = task_create("init");
+	task = task_create(proc_name);
 
-	vfs_stat(init_name, &stat);
+	vfs_stat(proc_name, &stat);
 	buf = (void *)kzalloc(stat.st_size);
 	PANIC(buf == NULL, "kzalloc failed");
 
-	vfs_read(init_name, buf, stat.st_size);
+	vfs_read(proc_name, buf, stat.st_size);
 	elf_parse_ehdr(buf, &ehdr);
 	elf_print_ehdr(&ehdr);
 
@@ -48,5 +56,12 @@ void run_init_process(char *init_name)
 		ptr += sizeof(struct elf32_phdr);
 	}
 	kfree(buf);
-	run_task(task, (void *)ehdr.e_entry);
+
+	void *stack = proc_map_stack(task, TASK_STACK_SIZE);
+	run_task(task, (void *)ehdr.e_entry, (void *)stack);
+}
+
+void run_init_process(char *init_name)
+{
+	do_spawn(init_name);
 }

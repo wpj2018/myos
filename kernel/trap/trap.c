@@ -12,41 +12,25 @@ size_t irq_stack[4];
 size_t abt_stack[4];
 size_t und_stack[4];
 
-struct task_struct *svc_hdl(struct context *ctx)
+void svc_hdl(struct sys_regs *regs)
 {
-	char *s = (char *)ctx->regs.r0;
+	char *s = (char *)regs->r0;
 	printk("%s", s);
-	return current;
 }
 
-struct task_struct *dabt_hdl(struct context *ctx)
+void dabt_hdl(struct sys_regs *regs)
 {
 	PANIC(1, "------catch data abort -------\n");
-	return current;
 }
 
-struct task_struct *irq_hdl(struct context *ctx)
+void irq_hdl(struct sys_regs *regs)
 {
-	struct task_struct *task;
 	size_t ack_no = gicc_get_ack();
 	timer_clear_int1();
 	gicc_set_eoi(ack_no);
 
-	task = sched_next();
-
-	return task;
+	schedule();
 }
-
-struct handler_vector g_handler_vector = {
-	NULL,
-	NULL,
-	&svc_hdl,
-	NULL,
-	&dabt_hdl,
-	NULL,
-	&irq_hdl,
-	NULL
-};
 
 void setup_stack(void)
 {
@@ -61,11 +45,11 @@ void setup_stack(void)
 		:
 		:
 		"I"(MODE_IRQ),
-		"r"(&irq_stack[4]),
+		"r"(&irq_stack[0]),
 		"I"(MODE_ABT),
-		"r"(&abt_stack[4]),
+		"r"(&abt_stack[0]),
 		"I"(MODE_UND),
-		"r"(&und_stack[4]),
+		"r"(&und_stack[0]),
 		"I"(MODE_SVC)
 	);
 }
