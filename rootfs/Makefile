@@ -6,6 +6,7 @@ all:
 	sudo mkdir rootfs
 	sudo mount -t ext4 ramdisk rootfs
 	sudo cp verify.bin rootfs
+	sudo cp myos.raw rootfs
 	sudo cp ../uapps/init/init.elf rootfs
 	sudo umount rootfs
 	rm -rf rootfs
