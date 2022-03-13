@@ -3,21 +3,21 @@
 #include "mm.h"
 #include "ext4.h"
 
-size_t ext4_get_bsize_bits(struct ext4_super_block *sb)
+size_t ext4_get_block_bits(struct ext4_super_block *sb)
 {
 	return 10 + sb->s_log_block_size;
 }
 
 size_t ext4_get_bsize(struct ext4_super_block *sb)
 {
-	return (1 << (10 + sb->s_log_block_size));
+	return (1 << ext4_get_block_bits(sb));
 }
 
 struct ext4_inode *ext4_get_itable(struct ext4_super_block *sb)
 {
 	size_t bsize = ext4_get_bsize(sb);
 	uintptr_t base = (uintptr_t)sb - EXT4_SB_OFFSET;
-	struct ext4_group_desc *gdt = (struct ext4_group_desc *)(base + bsize * 1);
+	struct ext4_group_desc *gdt = (struct ext4_group_desc *)(base + (sb->s_first_data_block  + 1) * bsize);
 
 	return (struct ext4_inode *)(base  + bsize * gdt->bg_inode_table_lo);
 }
@@ -103,36 +103,36 @@ struct ext4_node *ext4_get_node(struct ext4_super_block *sb, struct ext4_extent_
 	return res;
 }
 
-size_t ext4_get_real_bno(struct ext4_super_block *sb, struct ext4_inode *inode, size_t logic_bno)
+size_t ext4_get_phy_bno(struct ext4_super_block *sb, struct ext4_inode *inode, size_t logic_bno)
 {
-	size_t real_bno = -1;
+	size_t phy_bno = -1;
 	struct ext4_extent_header *hdr = (struct ext4_extent_header *)(&inode->i_block[0]);
 	struct ext4_node *node = ext4_get_node(sb, hdr, logic_bno);
 
 	if (node) {
-		real_bno = node->leaf.ee_start_lo + logic_bno - node->leaf.ee_block;
+		phy_bno = node->leaf.ee_start_lo + logic_bno - node->leaf.ee_block;
 	}
 
-	return real_bno;
+	return phy_bno;
 }
 
 struct ext4_dentry *ext4_get_dentry(struct ext4_super_block *sb, struct ext4_inode *inode, char *name)
 {
 	struct ext4_dentry *dentry = NULL;
 	void *bptr = NULL;
-	size_t bsize_bits = ext4_get_bsize_bits(sb);
+	size_t bsize_bits = ext4_get_block_bits(sb);
 	size_t bsize = ext4_get_bsize(sb);
 
 	size_t nblocks = (inode->i_size_lo + bsize - 1) >> bsize_bits;
-	size_t real_bno = -1;
+	size_t phy_bno = -1;
 
 	for (size_t i = 0; i < nblocks; i++) {
-		real_bno = ext4_get_real_bno(sb, inode, i);
-		if (real_bno == -1) {
+		phy_bno = ext4_get_phy_bno(sb, inode, i);
+		if (phy_bno == -1) {
 			continue;
 		}
 
-		bptr = ext4_get_block_ptr(sb, real_bno);
+		bptr = ext4_get_block_ptr(sb, phy_bno);
 		dentry = ext4_lookup_dentry(sb, bptr, name);
 		if (dentry) {
 			break;
@@ -144,22 +144,22 @@ struct ext4_dentry *ext4_get_dentry(struct ext4_super_block *sb, struct ext4_ino
 
 void ext4_read_file(struct ext4_super_block *sb, struct ext4_inode *inode, void *buf, size_t pos, size_t count)
 {
-	size_t bsize_bits = ext4_get_bsize_bits(sb);
+	size_t bsize_bits = ext4_get_block_bits(sb);
 	size_t bsize = ext4_get_bsize(sb);
 
 	size_t nblocks = (count + bsize - 1) >> bsize_bits;
-	size_t real_bno = -1;
+	size_t phy_bno = -1;
 
 	void *bptr = NULL;
 	size_t off = 0;
 	size_t size = 0;
 
 	for (size_t i = 0; i < nblocks; i++) {
-		real_bno = ext4_get_real_bno(sb, inode, pos >> bsize_bits);
-		if (real_bno == -1) {
+		phy_bno = ext4_get_phy_bno(sb, inode, pos >> bsize_bits);
+		if (phy_bno == -1) {
 			continue;
 		}
-		bptr = ext4_get_block_ptr(sb, real_bno);
+		bptr = ext4_get_block_ptr(sb, phy_bno);
 		off = pos - (pos >> bsize_bits << bsize_bits); // off = pos % bsize;
 		size = count < bsize - off ? count : bsize - off;
 		memcpy(buf, bptr + off, size);
