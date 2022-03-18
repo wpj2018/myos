@@ -5,8 +5,7 @@
 #include "gic.h"
 #include "timer.h"
 #include "sched.h"
-#include "trap.h"
-#include "preempt.h"
+#include "interrupt.h"
 
 size_t irq_stack[4];
 size_t abt_stack[4];
@@ -54,7 +53,7 @@ void setup_stack(void)
 	);
 }
 
-void trap_init(void)
+void interrupt_init(void)
 {
 	extern char __vector_start[];
 	extern char __vector_end[];

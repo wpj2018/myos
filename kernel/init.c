@@ -1,6 +1,6 @@
 #include "bootmem.h"
 #include "mm.h"
-#include "trap.h"
+#include "interrupt.h"
 #include "module.h"
 #include "task.h"
 #include "fs.h"
@@ -17,7 +17,7 @@ int start_kernel(struct boot_args *args)
 	printk("%s", &logo[0]);
 
 	fs_init();
-	trap_init();
+	interrupt_init();
 	module_init();
 	//task_init();
 	run_init_process("init.elf");
