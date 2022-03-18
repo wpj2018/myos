@@ -1,5 +1,4 @@
 #include "string.h"
-#include "bootmem.h"
 #include "buddy.h"
 #include "slab.h"
 #include "mm.h"
@@ -47,13 +46,4 @@ void kfree(void *vaddr)
 	} else {
 		buddy_free_pages(page);
 	}
-}
-
-void mm_init(void)
-{
-	bootmem_stat();
-	buddy_init();
-	bootmem_free_to_buddy();
-	buddy_stat();
-	slab_init();
 }
