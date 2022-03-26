@@ -10,9 +10,7 @@
 const char logo[] = "hello myos !!!\n";
 int start_kernel(struct boot_args *args)
 {
-	bootmem_init((struct boot_args *)__PA_VA__(args));
-	paging_init();
-	mm_init();
+	mm_init((struct boot_args *)__PA_VA__(args));
 
 	printk("%s", &logo[0]);
 

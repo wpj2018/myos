@@ -27,6 +27,8 @@ ENTRY(__switch_to)
 	ldr r2, [r1, #REG_NUM * 4]
 	sub r2, r2, #VA_PA_OFF
 	mcr p15, 0, r2, c2, c0, 0
+	// flush tlb
+	mcr p15, 0, r0, c8, c6, 2
 
 	ldr r2, [r1, #(REG_NUM - 1) * 4]
 	msr spsr, r2

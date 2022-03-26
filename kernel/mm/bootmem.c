@@ -8,7 +8,6 @@ struct mem_bank g_init_banks[] = {
 };
 struct mem_info g_mem_info;
 struct page *g_mem_pages;
-bool g_bootmem_is_work = true;
 
 static void bootmem_add_bank(struct mem_bank *bank)
 {
@@ -167,10 +166,4 @@ void bootmem_free_to_buddy(void)
 		}
 	}
 	bootmem_free_meta_to_buddy();
-	g_bootmem_is_work = false;
-}
-
-bool bootmem_is_work(void)
-{
-	return g_bootmem_is_work;
 }

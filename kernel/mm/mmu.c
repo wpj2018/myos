@@ -3,80 +3,65 @@
 #include "buddy.h"
 #include "mm.h"
 
-size_t *g_pt_base = (size_t *)__PA_VA__(PHY_PT_BASE);
+static void flush_tlb(void)
+{
+	asm("mcr p15, 0, r0, c8, c6, 2");
+}
 
-static void clear_secs(uintptr_t vstart, size_t size)
+static void clear_secs(size_t *pgd, uintptr_t vstart, size_t size)
 {
 	size_t s_idx = vstart >> SEC_BITS;
 	size_t e_idx = s_idx + (size >> SEC_BITS);
 
 	for (size_t idx = s_idx; idx < e_idx; idx++) {
-		g_pt_base[idx] = 0;
+		pgd[idx] = 0;
 	}
+	flush_tlb();
 }
 
-static void map_secs(uintptr_t vstart, uintptr_t pstart, size_t size)
+static void map_secs(size_t *pgd, uintptr_t vstart, uintptr_t pstart, size_t size)
 {
-	/*
-	   g_pt_base cannot be used for it stored in data section and
-	   mmu is not enabled, so we cannot access vaddr
-	 */
-	size_t *pt_base = (size_t *)PHY_PT_BASE;
 	size_t s_idx = vstart >> SEC_BITS;
 	size_t e_idx = s_idx + (size >> SEC_BITS);
 	uintptr_t paddr = pstart & SEC_MASK;
 
 	for (size_t idx = s_idx; idx < e_idx; idx++, paddr += SEC_SIZE) {
-		pt_base[idx] = paddr | PMD_SEC_FLAGS;
+		pgd[idx] = paddr | PMD_SEC_FLAGS;
 	}
+	flush_tlb();
 }
 
-static void clear_page(uintptr_t vaddr)
+static void clear_page(size_t *pgd, uintptr_t vaddr)
 {
 	size_t l1_idx = vaddr >> SEC_BITS;
 	size_t l2_idx = (vaddr >> PAGE_BITS) & 0xff;
-	uintptr_t phy_page = 0;
+	uintptr_t phy_page = pgd[l1_idx] & PAGE_MASK;
 
-	if (g_pt_base[l1_idx]) {
-		phy_page= g_pt_base[l1_idx] & PAGE_MASK;
+	if (phy_page) {
+		((uintptr_t *)__PA_VA__(phy_page))[l2_idx] = 0;
 	}
-	uintptr_t *page_table = (uintptr_t *)__PA_VA__(phy_page);
-	if (page_table && page_table[l2_idx]) {
-		page_table[l2_idx] = 0;
-	}
+	flush_tlb();
 }
 
-static uintptr_t phy_zalloc_page(void)
-{
-	uintptr_t phy_page = 0;
-	struct page *page;
-
-	if (bootmem_is_work()) {
-		phy_page = (uintptr_t)bootmem_alloc();
-	} else {
-		phy_page = __VA_PA__(kzalloc(PAGE_SIZE));
-	}
-
-	return phy_page;
-}
-
-void map_page(size_t *pgd, uintptr_t vaddr, uintptr_t paddr, size_t perm, size_t domain_id)
+static void map_page(size_t *pgd, uintptr_t vaddr, uintptr_t paddr, size_t perm, size_t domain_id)
 {
 	size_t l1_idx = vaddr >> SEC_BITS;
 	size_t l2_idx = (vaddr >> PAGE_BITS) & 0xff;
-	size_t mmu_flags = PT_TYPE_SMALL | PT_B | PT_C | perm;
-	uintptr_t phy_page = 0;
+	size_t flags = PT_TYPE_SMALL | PT_B | PT_C | perm;
+	uintptr_t phy_page = pgd[l1_idx] & PAGE_MASK;
 
-	if (!pgd[l1_idx]) {
-		phy_page = phy_zalloc_page();
+	if (!phy_page) {
+		void *va = kzalloc(PAGE_SIZE);
+		BUG_ON(va == NULL);
+		phy_page = __VA_PA__(va);
 		pgd[l1_idx] = phy_page | PMD_TYPE_PT | (domain_id << 5);
-	} else {
-		phy_page = pgd[l1_idx] & PAGE_MASK;
 	}
+
 	uintptr_t *page_table = (uintptr_t *)__PA_VA__(phy_page);
 	if (!page_table[l2_idx]) {
-		page_table[l2_idx] = (paddr & PAGE_MASK) | mmu_flags;
+		page_table[l2_idx] = (paddr & PAGE_MASK) | flags;
 	}
+	flush_tlb();
 }
 
 static void enable_mmu(void)
@@ -100,24 +85,37 @@ static void enable_mmu(void)
 
 void early_mmu_init(void)
 {
-	map_secs(PHY_RAM_BASE, PHY_RAM_BASE, SEC_SIZE);
-	map_secs(__PA_VA__(PHY_RAM_BASE), PHY_RAM_BASE, PHY_RAM_END - PHY_RAM_BASE);
+	map_secs((size_t *)PHY_PT_BASE, PHY_RAM_BASE, PHY_RAM_BASE, SEC_SIZE);
+	map_secs((size_t *)PHY_PT_BASE,
+		 VIRT_KERNEL_BASE - TEXT_OFFSET, PHY_RAM_BASE,
+		 VIRT_HIGHMEM_BASE - VIRT_KERNEL_BASE + TEXT_OFFSET
+	);
+	map_secs((size_t *)PHY_PT_BASE, VIRT_UART_BASE, PHY_UART_BASE, SEC_SIZE);
 
 	enable_mmu();
 }
 
-void paging_init(void)
+void mmu_init(void)
 {
-	clear_secs(0, VIRT_KERNEL_BASE);
-	clear_secs(VIRT_HIGHMEM_BASE, VIRT_END_MEM - VIRT_HIGHMEM_BASE + 1);
+	clear_secs((size_t *)VIRT_PT_BASE, 0, VIRT_KERNEL_BASE);
+	clear_secs((size_t *)VIRT_PT_BASE, VIRT_HIGHMEM_BASE, VIRT_END_MEM - VIRT_HIGHMEM_BASE + 1);
 
-	map_page((size_t *)VIRT_PT_BASE, VIRT_UART_BASE, PHY_UART_BASE, PT_AP_RW, DOMAIN_KERN_ID);
+	map_kern_page((size_t *)VIRT_PT_BASE, VIRT_UART_BASE, PHY_UART_BASE, PT_AP_RW);
 	/* why set read-only does not work */
-	map_page((size_t *)VIRT_PT_BASE, VIRT_VECTOR_BASE, PHY_VECTOR_BASE, PT_AP_RD, DOMAIN_KERN_ID);
+	map_kern_page((size_t *)VIRT_PT_BASE, VIRT_VECTOR_BASE, PHY_VECTOR_BASE, PT_AP_RD);
 }
 
 void *ioremap(uintptr_t phys_addr)
 {
-	map_page((size_t *)VIRT_PT_BASE, phys_addr, phys_addr, PT_AP_RW, DOMAIN_KERN_ID);
+	map_kern_page((size_t *)VIRT_PT_BASE, phys_addr, phys_addr, PT_AP_RW);
 	return (void*)phys_addr;
+}
+
+void map_kern_page(size_t *pgd, uintptr_t vaddr, uintptr_t paddr, size_t perm)
+{
+	map_page(pgd, vaddr, paddr, perm, DOMAIN_KERN_ID);
+}
+void map_user_page(size_t *pgd, uintptr_t vaddr, uintptr_t paddr, size_t perm)
+{
+	map_page(pgd, vaddr, paddr, perm, DOMAIN_USER_ID);
 }

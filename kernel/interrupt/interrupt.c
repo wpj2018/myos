@@ -19,7 +19,7 @@ void svc_hdl(struct sys_regs *regs)
 
 void dabt_hdl(struct sys_regs *regs)
 {
-	PANIC(1, "------catch data abort -------\n");
+	BUG_ON(true);
 }
 
 void irq_hdl(struct sys_regs *regs)

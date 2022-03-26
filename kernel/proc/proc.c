@@ -9,7 +9,7 @@ void *proc_map_stack(struct task_struct *task, size_t stack_size)
 {
 	uintptr_t vaddr = (uintptr_t)(0x80000000);
 	uintptr_t kaddr = (uintptr_t)kzalloc(stack_size);
-	map_page(task->ctx->pgd, vaddr, __VA_PA__(kaddr), PT_AP_RW, DOMAIN_USER_ID);
+	map_user_page(task->ctx->pgd, vaddr, __VA_PA__(kaddr), PT_AP_RW);
 	return (void *)(vaddr + stack_size);
 }
 
@@ -23,7 +23,7 @@ void proc_map_phdr(struct task_struct *task, struct elf32_phdr *phdr, void *buf)
 
 	memcpy((void *)page_to_virt(pages), buf + phdr->p_offset, file_sz);
 	for (size_t i = 0; i < nr_pages; i++, vaddr += PAGE_SIZE) {
-		map_page(task->ctx->pgd, vaddr, page_to_phy(&pages[i]), PT_AP_RW, DOMAIN_USER_ID);
+		map_user_page(task->ctx->pgd, vaddr, page_to_phy(&pages[i]), PT_AP_RW);
 	}
 }
 
@@ -40,7 +40,7 @@ void do_spawn(char *proc_name)
 
 	vfs_stat(proc_name, &stat);
 	buf = (void *)kzalloc(stat.st_size);
-	PANIC(buf == NULL, "kzalloc failed");
+	BUG_ON(buf == NULL);
 
 	vfs_read(proc_name, buf, stat.st_size);
 	elf_parse_ehdr(buf, &ehdr);

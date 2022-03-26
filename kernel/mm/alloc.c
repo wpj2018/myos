@@ -15,12 +15,12 @@ void *kalloc(size_t size)
 
 	if (SLAB_HEAD_SIZE + size <= PAGE_SIZE) {
 		ret = slab_alloc(SLAB_HEAD_SIZE + size);
-		PANIC(ret == NULL, "slab no mem");
+		BUG_ON(ret == NULL);
 		*(size_t *)ret = size;
 		ret += SLAB_HEAD_SIZE;
 	} else {
 		page = buddy_alloc_pages(size);
-		PANIC(page == NULL, "buddy no mem");
+		BUG_ON(page == NULL);
 		ret = (void *)page_to_virt(page);
 	}
 	return ret;

@@ -2,7 +2,9 @@
 
 #include "page.h"
 #include "printk.h"
+#include "bootmem.h"
 #include "buddy.h"
+#include "debug.h"
 
 #define VIRT_END_MEM		(~0UL)
 #define VIRT_HIGHMEM_BASE	(VIRT_END_MEM - 128 * SEC_SIZE + 1)
@@ -38,16 +40,17 @@
 #define DOMAIN_DACR		(__DOMAIN__(DOMAIN_KERN_ID, DOMAIN_CLIENT) |\
 				 __DOMAIN__(DOMAIN_USER_ID, DOMAIN_CLIENT))
 
-#define PMD_SEC_FLAGS		(PMD_TYPE_SEC | PMD_SEC_B | PMD_SEC_C | PMD_SEC_AP_RW | DOMAIN_KERN_ID)
+#define PMD_SEC_FLAGS		(PMD_TYPE_SEC | PMD_SEC_B | PMD_SEC_C | PMD_SEC_AP_RW)
 
 
-void mm_init(void);
-void paging_init(void);
+void mm_init(struct boot_args *);
+void mmu_init(void);
 void *ioremap(uintptr_t phys_addr);
 void *vmalloc(size_t size);
 void *kalloc(size_t size);
 void *kzalloc(size_t size);
 void kfree(void *vaddr);
-void map_page(size_t *pgd, uintptr_t vaddr, uintptr_t paddr, size_t perm, size_t domain_id);
+void map_kern_page(size_t *pgd, uintptr_t vaddr, uintptr_t paddr, size_t perm);
+void map_user_page(size_t *pgd, uintptr_t vaddr, uintptr_t paddr, size_t perm);
 
 #endif
